@@ -6,6 +6,7 @@ import {
   Calculator,
   History,
   LayoutDashboard,
+  Package,
   Settings,
 } from "lucide-react";
 
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Menghitung", href: "/calculate", icon: Calculator },
   { label: "History", href: "/history", icon: History },
+  { label: "Kelola Barang", href: "/products", icon: Package },
   { label: "Settings", href: "/settings", icon: Settings },
 ] as const;
 

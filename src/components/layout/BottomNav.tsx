@@ -6,6 +6,7 @@ import {
   Calculator,
   History,
   LayoutDashboard,
+  Package,
   Settings,
 } from "lucide-react";
 
@@ -15,6 +16,7 @@ const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Menghitung", href: "/calculate", icon: Calculator },
   { label: "History", href: "/history", icon: History },
+  { label: "Barang", href: "/products", icon: Package },
   { label: "Settings", href: "/settings", icon: Settings },
 ] as const;
 
@@ -23,7 +25,7 @@ export function BottomNav() {
 
   return (
     <nav className="md:hidden fixed inset-x-0 bottom-0 z-30 border-t bg-background">
-      <ul className="grid grid-cols-4">
+      <ul className="grid grid-cols-5">
         {NAV_ITEMS.map(({ label, href, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`);
           return (
