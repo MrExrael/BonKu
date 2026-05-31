@@ -1,10 +1,10 @@
 /**
- * Helper ekspor bon. html2canvas & jsPDF di-import secara dinamis agar tidak
- * ikut ter-bundle di server / saat halaman pertama dimuat.
+ * Helper ekspor bon. html2canvas-pro & jsPDF di-import secara dinamis agar
+ * tidak ikut ter-bundle di server / saat halaman pertama dimuat.
  *
- * Catatan penting: html2canvas TIDAK mendukung fungsi warna CSS modern seperti
- * oklch(). Pastikan elemen yang di-capture (mis. BonTemplate) hanya memakai
- * warna eksplisit (hex/rgb), bukan token tema berbasis oklch.
+ * Memakai html2canvas-pro (fork yang mendukung fungsi warna modern seperti
+ * oklch()), karena tema base-nova memakai oklch pada banyak token (mis.
+ * border-color global). html2canvas versi lama akan error pada warna oklch.
  */
 
 /** Capture sebuah elemen DOM menjadi canvas (background putih, skala 2x). */
@@ -16,7 +16,7 @@ export async function captureElement(
     throw new Error(`Elemen dengan id "${elementId}" tidak ditemukan`);
   }
 
-  const html2canvas = (await import("html2canvas")).default;
+  const html2canvas = (await import("html2canvas-pro")).default;
   return html2canvas(element, {
     scale: 2,
     backgroundColor: "#ffffff",
