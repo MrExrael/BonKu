@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Receipt } from "lucide-react";
 
 import { formatDate, formatRupiah } from "@/lib/utils/format";
+import { useCompanyName } from "@/lib/hooks/use-company-name";
 import type { TransactionWithItems } from "@/lib/services/transactions";
 import {
   Card,
@@ -45,6 +46,7 @@ function byCreatedAtDesc(a: TransactionWithItems, b: TransactionWithItems) {
 
 export function RecentActivity({ transactions, loading }: RecentActivityProps) {
   const [detail, setDetail] = React.useState<TransactionWithItems | null>(null);
+  const companyName = useCompanyName();
 
   const recent = React.useMemo(
     () => [...transactions].sort(byCreatedAtDesc).slice(0, 5),
@@ -163,7 +165,7 @@ export function RecentActivity({ transactions, loading }: RecentActivityProps) {
           {detail && (
             <div className="space-y-4">
               <div className="flex justify-center overflow-x-auto rounded-lg border bg-white p-3">
-                <BonTemplate transaction={detail} />
+                <BonTemplate transaction={detail} companyName={companyName} />
               </div>
               <ExportButtons transactionNumber={detail.transaction_number} />
             </div>

@@ -8,10 +8,12 @@ import { Plus } from "lucide-react";
 import { getTransactions } from "@/lib/services/transactions";
 import type { TransactionWithItems } from "@/lib/services/transactions";
 import { buttonVariants } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
   FilterBar,
   type HistoryFilters,
+  type StatusFilter,
 } from "@/components/history/FilterBar";
 import { TransactionsTable } from "@/components/history/TransactionsTable";
 
@@ -26,6 +28,7 @@ function HistoryContent() {
       dateFrom: searchParams.get("from") ?? "",
       dateTo: searchParams.get("to") ?? "",
       recipientName: searchParams.get("recipient") ?? "",
+      status: (searchParams.get("status") as StatusFilter) ?? "",
     }),
     [searchParams]
   );
@@ -51,6 +54,7 @@ function HistoryContent() {
       dateFrom: filters.dateFrom || undefined,
       dateTo: filters.dateTo || undefined,
       recipientName: filters.recipientName || undefined,
+      status: filters.status || undefined,
     });
     setData(error || !result ? [] : result);
     setLoading(false);
@@ -70,6 +74,7 @@ function HistoryContent() {
     if (next.dateFrom) params.set("from", next.dateFrom);
     if (next.dateTo) params.set("to", next.dateTo);
     if (next.recipientName) params.set("recipient", next.recipientName);
+    if (next.status) params.set("status", next.status);
     const query = params.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, {
       scroll: false,
@@ -93,6 +98,22 @@ function HistoryContent() {
           Transaksi Baru
         </Link>
       </div>
+
+      <Tabs
+        value={filters.status || "all"}
+        onValueChange={(value) =>
+          handleFilterChange({
+            ...filters,
+            status: value === "all" ? "" : (value as StatusFilter),
+          })
+        }
+      >
+        <TabsList>
+          <TabsTrigger value="all">Semua</TabsTrigger>
+          <TabsTrigger value="lunas">Lunas</TabsTrigger>
+          <TabsTrigger value="belum_lunas">Belum Lunas</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       <FilterBar
         filters={filters}

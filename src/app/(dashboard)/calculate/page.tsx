@@ -34,8 +34,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ItemsTable, type CalcItem } from "@/components/calculate/ItemsTable";
-import { SummaryCard } from "@/components/calculate/SummaryCard";
+import { useCompanyName } from "@/lib/hooks/use-company-name";
+import {
+  ItemsTable,
+  type CalcItem,
+} from "@/components/calculate/ItemsTable";
+import {
+  SummaryCard,
+  type PaymentStatus,
+} from "@/components/calculate/SummaryCard";
 import { RecipientForm } from "@/components/calculate/RecipientForm";
 import { BonTemplate } from "@/components/bon/BonTemplate";
 import { ExportButtons } from "@/components/bon/ExportButtons";
@@ -90,7 +97,10 @@ function CalculateContent() {
     newRow(),
   ]);
   const [debt, setDebt] = React.useState(0);
+  const [paymentStatus, setPaymentStatus] =
+    React.useState<PaymentStatus>("lunas");
   const [products, setProducts] = React.useState<string[]>([]);
+  const companyName = useCompanyName();
   const [saving, setSaving] = React.useState(false);
   const [saved, setSaved] = React.useState<TransactionWithItems | null>(null);
   const [dialogOpen, setDialogOpen] = React.useState(false);
@@ -129,6 +139,9 @@ function CalculateContent() {
         return;
       }
       setEditNumber(data.transaction_number);
+      setPaymentStatus(
+        data.payment_status === "belum_lunas" ? "belum_lunas" : "lunas"
+      );
       dispatch({
         type: "load",
         items: data.transaction_items.map((it) => ({
@@ -180,6 +193,7 @@ function CalculateContent() {
       subtotal,
       debt,
       grand_total: subtotal - debt,
+      payment_status: paymentStatus,
     };
 
     const parsed = transactionSchema.safeParse(candidate);
@@ -198,6 +212,7 @@ function CalculateContent() {
       subtotal: parsed.data.subtotal,
       debt: parsed.data.debt,
       grand_total: parsed.data.grand_total,
+      payment_status: parsed.data.payment_status,
       items: parsed.data.items,
     };
 
@@ -235,6 +250,7 @@ function CalculateContent() {
   function handleNewTransaction() {
     dispatch({ type: "reset" });
     setDebt(0);
+    setPaymentStatus("lunas");
     recipientForm.reset({
       recipient_name: "",
       phone: "",
@@ -288,7 +304,13 @@ function CalculateContent() {
         </Card>
 
         <div className="space-y-4">
-          <SummaryCard subtotal={subtotal} debt={debt} onDebtChange={setDebt} />
+          <SummaryCard
+            subtotal={subtotal}
+            debt={debt}
+            onDebtChange={setDebt}
+            paymentStatus={paymentStatus}
+            onPaymentStatusChange={setPaymentStatus}
+          />
           <Button
             type="button"
             className="w-full"
@@ -330,7 +352,7 @@ function CalculateContent() {
           {saved && (
             <div className="space-y-4">
               <div className="flex justify-center overflow-x-auto rounded-lg border bg-white p-3">
-                <BonTemplate transaction={saved} />
+                <BonTemplate transaction={saved} companyName={companyName} />
               </div>
 
               <ExportButtons transactionNumber={saved.transaction_number} />

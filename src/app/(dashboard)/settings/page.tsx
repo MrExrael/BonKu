@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { BackupRestore } from "@/components/settings/BackupRestore";
+import { CompanySettings } from "@/components/settings/CompanySettings";
 
 export default function SettingsPage() {
   return (
@@ -30,6 +31,8 @@ export default function SettingsPage() {
         </TabsList>
 
         <TabsContent value="akun" className="mt-4 space-y-4">
+          <CompanySettings />
+
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Pengaturan Akun</CardTitle>

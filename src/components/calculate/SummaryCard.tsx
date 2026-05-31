@@ -4,18 +4,29 @@ import { AlertCircle } from "lucide-react";
 
 import { formatRupiah } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { CurrencyInput } from "@/components/calculate/ItemsTable";
 
+export type PaymentStatus = "lunas" | "belum_lunas";
+
 interface SummaryCardProps {
   subtotal: number;
   debt: number;
   onDebtChange: (value: number) => void;
+  paymentStatus: PaymentStatus;
+  onPaymentStatusChange: (status: PaymentStatus) => void;
 }
 
-export function SummaryCard({ subtotal, debt, onDebtChange }: SummaryCardProps) {
+export function SummaryCard({
+  subtotal,
+  debt,
+  onDebtChange,
+  paymentStatus,
+  onPaymentStatusChange,
+}: SummaryCardProps) {
   const grandTotal = subtotal - debt;
   const isNegative = grandTotal < 0;
 
@@ -44,6 +55,26 @@ export function SummaryCard({ subtotal, debt, onDebtChange }: SummaryCardProps) 
               Hutang tidak boleh melebihi subtotal.
             </p>
           )}
+        </div>
+
+        <div className="space-y-1.5">
+          <Label>Status Pembayaran</Label>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              type="button"
+              variant={paymentStatus === "lunas" ? "default" : "outline"}
+              onClick={() => onPaymentStatusChange("lunas")}
+            >
+              Lunas
+            </Button>
+            <Button
+              type="button"
+              variant={paymentStatus === "belum_lunas" ? "default" : "outline"}
+              onClick={() => onPaymentStatusChange("belum_lunas")}
+            >
+              Belum Lunas
+            </Button>
+          </div>
         </div>
 
         <Separator />

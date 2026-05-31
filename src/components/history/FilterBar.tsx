@@ -14,11 +14,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+export type StatusFilter = "" | "lunas" | "belum_lunas";
+
 export interface HistoryFilters {
   search: string;
   dateFrom: string;
   dateTo: string;
   recipientName: string;
+  status: StatusFilter;
 }
 
 export const EMPTY_FILTERS: HistoryFilters = {
@@ -26,6 +29,7 @@ export const EMPTY_FILTERS: HistoryFilters = {
   dateFrom: "",
   dateTo: "",
   recipientName: "",
+  status: "",
 };
 
 const ALL_RECIPIENTS = "__all__";

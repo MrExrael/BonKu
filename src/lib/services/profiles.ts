@@ -40,6 +40,7 @@ export async function getProfile(): Promise<ServiceResult<Profile>> {
 export async function updateProfile(data: {
   full_name?: string;
   email?: string;
+  company_name?: string;
 }): Promise<ServiceResult<Profile>> {
   try {
     const supabase = createClient();

@@ -19,6 +19,7 @@ export interface TransactionFilters {
   dateFrom?: string;
   dateTo?: string;
   recipientName?: string;
+  status?: "lunas" | "belum_lunas";
 }
 
 /** Input pembuatan transaksi: header tanpa user_id & transaction_number (auto), plus items. */
@@ -82,6 +83,9 @@ export async function getTransactions(
     }
     if (filters.dateTo) {
       query = query.lte("transaction_date", filters.dateTo);
+    }
+    if (filters.status) {
+      query = query.eq("payment_status", filters.status);
     }
 
     const { data, error } = await query;

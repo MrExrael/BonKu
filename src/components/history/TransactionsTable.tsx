@@ -36,6 +36,8 @@ import {
   deleteTransaction,
   type TransactionWithItems,
 } from "@/lib/services/transactions";
+import { useCompanyName } from "@/lib/hooks/use-company-name";
+import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -87,6 +89,7 @@ export function TransactionsTable({
   onChanged,
 }: TransactionsTableProps) {
   const router = useRouter();
+  const companyName = useCompanyName();
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "transaction_date", desc: true },
   ]);
@@ -203,6 +206,26 @@ export function TransactionsTable({
             {formatRupiah(row.original.grand_total)}
           </div>
         ),
+      },
+      {
+        accessorKey: "payment_status",
+        enableSorting: false,
+        header: () => "Status",
+        cell: ({ row }) => {
+          const paid = row.original.payment_status !== "belum_lunas";
+          return (
+            <Badge
+              variant={paid ? "secondary" : "outline"}
+              className={
+                paid
+                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                  : "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+              }
+            >
+              {paid ? "Lunas" : "Belum Lunas"}
+            </Badge>
+          );
+        },
       },
       {
         id: "actions",
@@ -381,7 +404,7 @@ export function TransactionsTable({
           {activeTx && (
             <div className="space-y-4">
               <div className="flex justify-center overflow-x-auto rounded-lg border bg-white p-3">
-                <BonTemplate transaction={activeTx} />
+                <BonTemplate transaction={activeTx} companyName={companyName} />
               </div>
               <ExportButtons transactionNumber={activeTx.transaction_number} />
             </div>

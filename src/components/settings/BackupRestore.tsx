@@ -44,6 +44,7 @@ interface BackupTransaction {
   subtotal: number;
   debt: number;
   grand_total: number;
+  payment_status?: string;
   transaction_items: {
     product_name: string;
     price: number;
@@ -105,6 +106,7 @@ export function BackupRestore() {
         subtotal: tx.subtotal,
         debt: tx.debt,
         grand_total: tx.grand_total,
+        payment_status: tx.payment_status,
         transaction_items: (tx.transaction_items ?? []).map((it) => ({
           product_name: it.product_name,
           price: it.price,
@@ -171,6 +173,9 @@ export function BackupRestore() {
         subtotal: tx.subtotal,
         debt: tx.debt,
         grand_total: tx.grand_total,
+        payment_status: tx.payment_status === "belum_lunas"
+          ? "belum_lunas"
+          : "lunas",
         items: (tx.transaction_items ?? []).map((it) => ({
           product_name: it.product_name,
           price: it.price,

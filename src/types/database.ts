@@ -14,18 +14,21 @@ export type Database = {
           id: string;
           full_name: string | null;
           email: string | null;
+          company_name: string | null;
           created_at: string | null;
         };
         Insert: {
           id: string;
           full_name?: string | null;
           email?: string | null;
+          company_name?: string | null;
           created_at?: string | null;
         };
         Update: {
           id?: string;
           full_name?: string | null;
           email?: string | null;
+          company_name?: string | null;
           created_at?: string | null;
         };
         Relationships: [
@@ -78,6 +81,7 @@ export type Database = {
           subtotal: number;
           debt: number;
           grand_total: number;
+          payment_status: string;
           transaction_date: string;
           created_at: string | null;
         };
@@ -91,6 +95,7 @@ export type Database = {
           subtotal?: number;
           debt?: number;
           grand_total?: number;
+          payment_status?: string;
           transaction_date?: string;
           created_at?: string | null;
         };
@@ -104,6 +109,7 @@ export type Database = {
           subtotal?: number;
           debt?: number;
           grand_total?: number;
+          payment_status?: string;
           transaction_date?: string;
           created_at?: string | null;
         };

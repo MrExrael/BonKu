@@ -8,10 +8,11 @@
 -- Profil user, terhubung 1:1 dengan auth.users.
 -- -----------------------------------------------------------------------------
 create table if not exists public.profiles (
-  id         uuid primary key references auth.users (id) on delete cascade,
-  full_name  text,
-  email      text,
-  created_at timestamptz default now()
+  id           uuid primary key references auth.users (id) on delete cascade,
+  full_name    text,
+  email        text,
+  company_name text,
+  created_at   timestamptz default now()
 );
 
 -- -----------------------------------------------------------------------------
@@ -41,6 +42,7 @@ create table if not exists public.transactions (
   subtotal           numeric(15, 2) not null default 0,
   debt               numeric(15, 2) not null default 0,
   grand_total        numeric(15, 2) not null default 0,
+  payment_status     text not null default 'lunas',
   transaction_date   timestamptz not null default now(),
   created_at         timestamptz default now()
 );
@@ -77,11 +79,12 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, full_name, email)
+  insert into public.profiles (id, full_name, email, company_name)
   values (
     new.id,
     new.raw_user_meta_data ->> 'full_name',
-    new.email
+    new.email,
+    coalesce(new.raw_user_meta_data ->> 'company_name', 'Grosir barang')
   );
   return new;
 end;

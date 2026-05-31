@@ -27,10 +27,13 @@ const cell: React.CSSProperties = {
 
 export function BonTemplate({
   transaction,
+  companyName = "Grosir barang",
 }: {
   transaction: TransactionWithItems;
+  companyName?: string;
 }) {
   const items = transaction.transaction_items ?? [];
+  const isPaid = transaction.payment_status !== "belum_lunas";
 
   return (
     <div
@@ -47,11 +50,11 @@ export function BonTemplate({
     >
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: 8 }}>
-        <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: -0.5 }}>
-          BonKu
+        <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: 1 }}>
+          Bon
         </div>
-        <div style={{ fontSize: 11, color: COLORS.muted }}>
-          Pembukuan praktis untuk UMKM
+        <div style={{ fontSize: 15, fontWeight: 700, marginTop: 2 }}>
+          {companyName}
         </div>
       </div>
       <div style={{ borderTop: `2px solid ${COLORS.line}`, marginBottom: 10 }} />
@@ -71,6 +74,7 @@ export function BonTemplate({
           {transaction.notes ? (
             <InfoRow label="Keterangan" value={transaction.notes} />
           ) : null}
+          <InfoRow label="Status" value={isPaid ? "LUNAS" : "BELUM LUNAS"} />
         </tbody>
       </table>
 
