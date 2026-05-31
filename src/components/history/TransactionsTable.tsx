@@ -26,11 +26,12 @@ import {
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
-import { formatDate, formatRupiah } from "@/lib/utils/format";
+import { formatDate, formatRupiah, formatTime } from "@/lib/utils/format";
 import {
   captureElement,
   exportToImage,
   exportToPDF,
+  printElement,
 } from "@/lib/utils/export";
 import {
   deleteTransaction,
@@ -119,7 +120,7 @@ export function TransactionsTable({
       const filename = `BonKu-${activeTx.transaction_number}`;
       try {
         if (pending === "print") {
-          window.print();
+          printElement("bon-template");
         } else {
           const canvas = await captureElement("bon-template");
           if (pending === "pdf") await exportToPDF(canvas, filename);
@@ -188,14 +189,19 @@ export function TransactionsTable({
             }
           />
         ),
-        cell: ({ row }) => formatDate(row.original.transaction_date),
+        cell: ({ row }) => {
+          const time = formatTime(row.original.created_at);
+          return time
+            ? `${formatDate(row.original.transaction_date)}, ${time}`
+            : formatDate(row.original.transaction_date);
+        },
       },
       {
         accessorKey: "grand_total",
         header: ({ column }) => (
           <SortHeader
             label="Grand Total"
-            className="justify-end"
+            className="w-full justify-end"
             onClick={() =>
               column.toggleSorting(column.getIsSorted() === "asc")
             }

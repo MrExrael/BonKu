@@ -81,3 +81,48 @@ function ensureExtension(filename: string, ext: string): string {
     ? filename
     : `${filename}.${ext}`;
 }
+
+/**
+ * Cetak hanya elemen tertentu (mis. bon) dengan membuka jendela baru berisi
+ * markup elemen tsb lalu memanggil print. Cara ini menghindari masalah layout
+ * saat elemen berada di dalam Dialog ber-transform (print jadi mungil/landscape).
+ * Jika popup diblokir, fallback ke window.print().
+ */
+export function printElement(elementId: string): void {
+  const element = document.getElementById(elementId);
+  if (!element) {
+    window.print();
+    return;
+  }
+
+  const win = window.open("", "_blank", "width=460,height=680");
+  if (!win) {
+    // Popup diblokir → fallback.
+    window.print();
+    return;
+  }
+
+  win.document.write(
+    `<!doctype html><html><head><meta charset="utf-8"><title>Bon</title>` +
+      `<style>@page{margin:10mm} html,body{margin:0;padding:0;background:#fff}` +
+      `body{display:flex;justify-content:center;padding:8px}</style>` +
+      `</head><body>${element.outerHTML}</body></html>`
+  );
+  win.document.close();
+  win.focus();
+
+  // Beri waktu render sebelum print, lalu tutup jendela.
+  win.onload = () => {
+    win.print();
+    win.close();
+  };
+  // Fallback bila onload tidak terpicu (konten statis).
+  setTimeout(() => {
+    try {
+      win.print();
+      win.close();
+    } catch {
+      /* sudah tertutup */
+    }
+  }, 400);
+}

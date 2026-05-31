@@ -8,6 +8,7 @@ import {
   captureElement,
   exportToImage,
   exportToPDF,
+  printElement,
 } from "@/lib/utils/export";
 import { Button } from "@/components/ui/button";
 
@@ -24,7 +25,7 @@ export function ExportButtons({
   const baseName = `BonKu-${transactionNumber}`;
 
   function handlePrint() {
-    window.print();
+    printElement(elementId);
   }
 
   async function runExport(action: Exclude<Action, "print">) {
