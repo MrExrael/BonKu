@@ -1,9 +1,11 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircle2, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+// import { CheckCircle2 } from "lucide-react"; // dipakai oleh layar verifikasi email (lihat blok yang dikomentari di bawah)
 import { toast } from "sonner";
 
 import { registerSchema, type RegisterInput } from "@/lib/validations/auth";
@@ -37,9 +39,10 @@ function getPasswordStrength(password: string): Strength {
 }
 
 export function RegisterForm() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirm, setShowConfirm] = React.useState(false);
-  const [submitted, setSubmitted] = React.useState(false);
+  // const [submitted, setSubmitted] = React.useState(false); // dipakai layar verifikasi email (lihat blok yang dikomentari di bawah)
 
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
@@ -73,27 +76,49 @@ export function RegisterForm() {
       return;
     }
 
-    setSubmitted(true);
-    toast.success("Pendaftaran berhasil", {
-      description: "Cek email Anda untuk verifikasi akun.",
-    });
+    // Tanpa verifikasi email: langsung masuk ke dashboard.
+    // PENTING: agar ini bekerja, "Confirm email" HARUS DINONAKTIFKAN di
+    // Supabase (Authentication -> Providers -> Email), supaya signUp langsung
+    // mengembalikan session. Jika "Confirm email" aktif, user akan dialihkan
+    // kembali ke /login oleh middleware karena belum ada session.
+    toast.success("Pendaftaran berhasil");
+    router.push("/dashboard");
+    router.refresh();
+
+    // ===========================================================================
+    // ALUR LAMA: tampilkan layar "cek email verifikasi".
+    // Untuk MENGAKTIFKAN KEMBALI verifikasi email:
+    //   1. Aktifkan "Confirm email" di Supabase.
+    //   2. Hapus 3 baris (toast + router.push + router.refresh) di atas.
+    //   3. Uncomment baris di bawah ini.
+    //   4. Uncomment state `submitted` (di atas) + blok `if (submitted)` di bawah.
+    //   5. Uncomment import CheckCircle2 di bagian atas file.
+    // ---------------------------------------------------------------------------
+    // setSubmitted(true);
+    // toast.success("Pendaftaran berhasil", {
+    //   description: "Cek email Anda untuk verifikasi akun.",
+    // });
   }
 
-  if (submitted) {
-    return (
-      <div className="flex flex-col items-center gap-3 py-4 text-center">
-        <CheckCircle2 className="size-12 text-emerald-500" />
-        <h3 className="text-lg font-semibold">Pendaftaran berhasil!</h3>
-        <p className="text-sm text-muted-foreground">
-          Kami telah mengirim email verifikasi ke{" "}
-          <span className="font-medium text-foreground">
-            {form.getValues("email")}
-          </span>
-          . Silakan periksa kotak masuk Anda untuk mengaktifkan akun.
-        </p>
-      </div>
-    );
-  }
+  // ===========================================================================
+  // LAYAR VERIFIKASI EMAIL (dinonaktifkan).
+  // Uncomment blok ini untuk menampilkan pesan "cek email" setelah daftar.
+  // ---------------------------------------------------------------------------
+  // if (submitted) {
+  //   return (
+  //     <div className="flex flex-col items-center gap-3 py-4 text-center">
+  //       <CheckCircle2 className="size-12 text-emerald-500" />
+  //       <h3 className="text-lg font-semibold">Pendaftaran berhasil!</h3>
+  //       <p className="text-sm text-muted-foreground">
+  //         Kami telah mengirim email verifikasi ke{" "}
+  //         <span className="font-medium text-foreground">
+  //           {form.getValues("email")}
+  //         </span>
+  //         . Silakan periksa kotak masuk Anda untuk mengaktifkan akun.
+  //       </p>
+  //     </div>
+  //   );
+  // }
 
   const isLoading = form.formState.isSubmitting;
 
