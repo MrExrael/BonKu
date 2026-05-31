@@ -1,6 +1,11 @@
 import * as React from "react";
 
-import { formatDate, formatNumber, formatRupiah } from "@/lib/utils/format";
+import {
+  formatDate,
+  formatNumber,
+  formatRupiah,
+  formatTime,
+} from "@/lib/utils/format";
 import type { TransactionWithItems } from "@/lib/services/transactions";
 
 /**
@@ -33,7 +38,10 @@ export function BonTemplate({
   companyName?: string;
 }) {
   const items = transaction.transaction_items ?? [];
-  const isPaid = transaction.payment_status !== "belum_lunas";
+  const time = formatTime(transaction.created_at);
+  const dateValue = time
+    ? `${formatDate(transaction.transaction_date)}, ${time}`
+    : formatDate(transaction.transaction_date);
 
   return (
     <div
@@ -63,10 +71,7 @@ export function BonTemplate({
       <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 10 }}>
         <tbody>
           <InfoRow label="No. Transaksi" value={transaction.transaction_number} />
-          <InfoRow
-            label="Tanggal"
-            value={formatDate(transaction.transaction_date)}
-          />
+          <InfoRow label="Tanggal" value={dateValue} />
           <InfoRow label="Nama" value={transaction.recipient_name} />
           {transaction.phone ? (
             <InfoRow label="HP" value={transaction.phone} />
@@ -74,7 +79,6 @@ export function BonTemplate({
           {transaction.notes ? (
             <InfoRow label="Keterangan" value={transaction.notes} />
           ) : null}
-          <InfoRow label="Status" value={isPaid ? "LUNAS" : "BELUM LUNAS"} />
         </tbody>
       </table>
 

@@ -40,6 +40,19 @@ export function formatDate(date: string | Date): string {
 }
 
 /**
+ * Format jam:menit dengan locale Indonesia. Contoh: "22.07".
+ */
+export function formatTime(date: string | Date | null): string {
+  if (!date) return "";
+  const d = typeof date === "string" ? new Date(date) : date;
+  if (Number.isNaN(d.getTime())) return "";
+  return new Intl.DateTimeFormat("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(d);
+}
+
+/**
  * Format tanggal untuk nilai input[type="date"] -> "YYYY-MM-DD".
  * Menggunakan komponen tanggal lokal (bukan UTC) agar tidak bergeser hari.
  */
