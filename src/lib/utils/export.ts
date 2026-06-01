@@ -25,22 +25,56 @@ export async function captureElement(
   });
 }
 
-/** Ekspor canvas menjadi PDF dengan ukuran halaman mengikuti rasio canvas. */
+/** Pilihan ukuran kertas ekspor. "current" = ukuran asli bon. */
+export type PaperSize = "current" | "a5" | "a6";
+
+// Ukuran kertas dalam milimeter (potret).
+const PAPER_MM: Record<Exclude<PaperSize, "current">, [number, number]> = {
+  a5: [148, 210],
+  a6: [105, 148],
+};
+
+const PAGE_MARGIN_MM = 8;
+
+/** Ekspor canvas menjadi PDF. Ukuran halaman: asli bon, atau A5/A6. */
 export async function exportToPDF(
   canvas: HTMLCanvasElement,
-  filename: string
+  filename: string,
+  size: PaperSize = "current"
 ): Promise<void> {
   const { jsPDF } = await import("jspdf");
-
   const imgData = canvas.toDataURL("image/png");
-  const orientation = canvas.width >= canvas.height ? "landscape" : "portrait";
-  const pdf = new jsPDF({
-    orientation,
-    unit: "px",
-    format: [canvas.width, canvas.height],
-  });
 
-  pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+  if (size === "current") {
+    const orientation =
+      canvas.width >= canvas.height ? "landscape" : "portrait";
+    const pdf = new jsPDF({
+      orientation,
+      unit: "px",
+      format: [canvas.width, canvas.height],
+    });
+    pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+    pdf.save(ensureExtension(filename, "pdf"));
+    return;
+  }
+
+  // A5 / A6: tempatkan bon di tengah-atas halaman dengan margin.
+  const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: size });
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const maxW = pageW - PAGE_MARGIN_MM * 2;
+  const maxH = pageH - PAGE_MARGIN_MM * 2;
+
+  const ratio = canvas.height / canvas.width;
+  let drawW = maxW;
+  let drawH = drawW * ratio;
+  if (drawH > maxH) {
+    drawH = maxH;
+    drawW = drawH / ratio;
+  }
+  const x = (pageW - drawW) / 2;
+  const y = PAGE_MARGIN_MM;
+  pdf.addImage(imgData, "PNG", x, y, drawW, drawH);
   pdf.save(ensureExtension(filename, "pdf"));
 }
 
@@ -48,24 +82,11 @@ export async function exportToPDF(
 export function exportToImage(
   canvas: HTMLCanvasElement,
   filename: string,
-  format: "png" | "jpg"
+  format: "png" | "jpg",
+  size: PaperSize = "current"
 ): void {
   const mime = format === "png" ? "image/png" : "image/jpeg";
-  let source = canvas;
-
-  // JPG tidak mendukung transparansi → ratakan ke background putih.
-  if (format === "jpg") {
-    const opaque = document.createElement("canvas");
-    opaque.width = canvas.width;
-    opaque.height = canvas.height;
-    const ctx = opaque.getContext("2d");
-    if (ctx) {
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, opaque.width, opaque.height);
-      ctx.drawImage(canvas, 0, 0);
-      source = opaque;
-    }
-  }
+  const source = size === "current" ? flatten(canvas, format) : paged(canvas, size);
 
   const dataUrl = source.toDataURL(mime, format === "jpg" ? 0.95 : undefined);
   const link = document.createElement("a");
@@ -74,6 +95,58 @@ export function exportToImage(
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+}
+
+/** Untuk JPG: ratakan ke background putih (PNG transparansi -> hitam di JPG). */
+function flatten(
+  canvas: HTMLCanvasElement,
+  format: "png" | "jpg"
+): HTMLCanvasElement {
+  if (format !== "jpg") return canvas;
+  const opaque = document.createElement("canvas");
+  opaque.width = canvas.width;
+  opaque.height = canvas.height;
+  const ctx = opaque.getContext("2d");
+  if (!ctx) return canvas;
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, opaque.width, opaque.height);
+  ctx.drawImage(canvas, 0, 0);
+  return opaque;
+}
+
+/** Tempatkan bon di atas kanvas berukuran A5/A6 (background putih), 150 DPI. */
+function paged(
+  canvas: HTMLCanvasElement,
+  size: Exclude<PaperSize, "current">
+): HTMLCanvasElement {
+  const DPI = 150;
+  const mmToPx = (mm: number) => Math.round((mm / 25.4) * DPI);
+  const [wmm, hmm] = PAPER_MM[size];
+  const pageW = mmToPx(wmm);
+  const pageH = mmToPx(hmm);
+  const margin = mmToPx(PAGE_MARGIN_MM);
+
+  const page = document.createElement("canvas");
+  page.width = pageW;
+  page.height = pageH;
+  const ctx = page.getContext("2d");
+  if (!ctx) return canvas;
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, pageW, pageH);
+
+  const maxW = pageW - margin * 2;
+  const maxH = pageH - margin * 2;
+  const ratio = canvas.height / canvas.width;
+  let drawW = maxW;
+  let drawH = drawW * ratio;
+  if (drawH > maxH) {
+    drawH = maxH;
+    drawW = drawH / ratio;
+  }
+  const x = (pageW - drawW) / 2;
+  const y = margin;
+  ctx.drawImage(canvas, x, y, drawW, drawH);
+  return page;
 }
 
 function ensureExtension(filename: string, ext: string): string {
