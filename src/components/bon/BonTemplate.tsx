@@ -38,6 +38,8 @@ export function BonTemplate({
   companyName?: string;
 }) {
   const items = transaction.transaction_items ?? [];
+  const totalKg = items.reduce((sum, i) => sum + (i.weight_kg || 0), 0);
+  const sisa = transaction.grand_total - transaction.paid;
   const time = formatTime(transaction.created_at);
   const dateValue = time
     ? `${formatDate(transaction.transaction_date)}, ${time}`
@@ -90,10 +92,10 @@ export function BonTemplate({
               Nama Barang
             </th>
             <th style={{ ...cell, textAlign: "right", borderBottom: `1px solid ${COLORS.line}`, fontWeight: 700 }}>
-              Harga
+              Kg
             </th>
             <th style={{ ...cell, textAlign: "right", borderBottom: `1px solid ${COLORS.line}`, fontWeight: 700 }}>
-              Kg
+              Harga
             </th>
             <th style={{ ...cell, textAlign: "right", borderBottom: `1px solid ${COLORS.line}`, fontWeight: 700 }}>
               Hasil
@@ -107,10 +109,10 @@ export function BonTemplate({
                 {item.product_name}
               </td>
               <td style={{ ...cell, textAlign: "right", borderBottom: `1px solid ${COLORS.faint}` }}>
-                {formatNumber(item.price)}
+                {formatNumber(item.weight_kg, 3)}
               </td>
               <td style={{ ...cell, textAlign: "right", borderBottom: `1px solid ${COLORS.faint}` }}>
-                {formatNumber(item.weight_kg, 3)}
+                {formatNumber(item.price)}
               </td>
               <td style={{ ...cell, textAlign: "right", borderBottom: `1px solid ${COLORS.faint}` }}>
                 {formatNumber(item.total)}
@@ -118,17 +120,41 @@ export function BonTemplate({
             </tr>
           ))}
         </tbody>
+        <tfoot>
+          <tr>
+            <td style={{ ...cell, fontWeight: 700, borderTop: `1px solid ${COLORS.line}` }}>
+              Total
+            </td>
+            <td style={{ ...cell, textAlign: "right", fontWeight: 700, borderTop: `1px solid ${COLORS.line}` }}>
+              {formatNumber(totalKg, 3)}
+            </td>
+            <td style={{ ...cell, borderTop: `1px solid ${COLORS.line}` }} />
+            <td style={{ ...cell, textAlign: "right", fontWeight: 700, borderTop: `1px solid ${COLORS.line}` }}>
+              {formatNumber(transaction.subtotal)}
+            </td>
+          </tr>
+        </tfoot>
       </table>
 
       {/* Summary */}
       <div style={{ marginTop: 12 }}>
         <SummaryRow label="Subtotal" value={formatRupiah(transaction.subtotal)} />
-        <SummaryRow label="Hutang" value={formatRupiah(transaction.debt)} />
+        {transaction.debt > 0 ? (
+          <SummaryRow
+            label={transaction.debt_label || "Hutang"}
+            value={formatRupiah(transaction.debt)}
+          />
+        ) : null}
         <div style={{ borderTop: `1px solid ${COLORS.line}`, margin: "6px 0" }} />
         <SummaryRow
           label="Grand Total"
           value={formatRupiah(transaction.grand_total)}
           bold
+        />
+        <SummaryRow label="Bayar" value={formatRupiah(transaction.paid)} />
+        <SummaryRow
+          label={sisa < 0 ? "Kembalian" : "Sisa"}
+          value={formatRupiah(Math.abs(sisa))}
         />
       </div>
 

@@ -43,6 +43,8 @@ interface BackupTransaction {
   transaction_date: string;
   subtotal: number;
   debt: number;
+  debt_label?: string;
+  paid?: number;
   grand_total: number;
   payment_status?: string;
   transaction_items: {
@@ -105,6 +107,8 @@ export function BackupRestore() {
         transaction_date: tx.transaction_date,
         subtotal: tx.subtotal,
         debt: tx.debt,
+        debt_label: tx.debt_label,
+        paid: tx.paid,
         grand_total: tx.grand_total,
         payment_status: tx.payment_status,
         transaction_items: (tx.transaction_items ?? []).map((it) => ({
@@ -172,6 +176,8 @@ export function BackupRestore() {
         transaction_date: tx.transaction_date,
         subtotal: tx.subtotal,
         debt: tx.debt,
+        debt_label: tx.debt_label || "Hutang",
+        paid: tx.paid ?? 0,
         grand_total: tx.grand_total,
         payment_status: tx.payment_status === "belum_lunas"
           ? "belum_lunas"

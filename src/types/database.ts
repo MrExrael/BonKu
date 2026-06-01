@@ -80,6 +80,8 @@ export type Database = {
           notes: string | null;
           subtotal: number;
           debt: number;
+          debt_label: string;
+          paid: number;
           grand_total: number;
           payment_status: string;
           transaction_date: string;
@@ -94,6 +96,8 @@ export type Database = {
           notes?: string | null;
           subtotal?: number;
           debt?: number;
+          debt_label?: string;
+          paid?: number;
           grand_total?: number;
           payment_status?: string;
           transaction_date?: string;
@@ -108,6 +112,8 @@ export type Database = {
           notes?: string | null;
           subtotal?: number;
           debt?: number;
+          debt_label?: string;
+          paid?: number;
           grand_total?: number;
           payment_status?: string;
           transaction_date?: string;

@@ -42,6 +42,7 @@ import {
 import {
   SummaryCard,
   type PaymentStatus,
+  type DebtLabel,
 } from "@/components/calculate/SummaryCard";
 import { RecipientForm } from "@/components/calculate/RecipientForm";
 import { BonTemplate } from "@/components/bon/BonTemplate";
@@ -97,6 +98,8 @@ function CalculateContent() {
     newRow(),
   ]);
   const [debt, setDebt] = React.useState(0);
+  const [debtLabel, setDebtLabel] = React.useState<DebtLabel>("Hutang");
+  const [paid, setPaid] = React.useState(0);
   const [paymentStatus, setPaymentStatus] =
     React.useState<PaymentStatus>("lunas");
   const [products, setProducts] = React.useState<string[]>([]);
@@ -117,6 +120,10 @@ function CalculateContent() {
 
   const subtotal = React.useMemo(
     () => items.reduce((sum, item) => sum + item.total, 0),
+    [items]
+  );
+  const totalKg = React.useMemo(
+    () => items.reduce((sum, item) => sum + (item.weight_kg || 0), 0),
     [items]
   );
 
@@ -142,6 +149,12 @@ function CalculateContent() {
       setPaymentStatus(
         data.payment_status === "belum_lunas" ? "belum_lunas" : "lunas"
       );
+      setDebtLabel(
+        (["Hutang", "DP", "Panjar", "Pinjaman"].includes(data.debt_label)
+          ? data.debt_label
+          : "Hutang") as DebtLabel
+      );
+      setPaid(data.paid ?? 0);
       dispatch({
         type: "load",
         items: data.transaction_items.map((it) => ({
@@ -192,6 +205,8 @@ function CalculateContent() {
       transaction_date: values.transaction_date,
       subtotal,
       debt,
+      debt_label: debtLabel,
+      paid,
       grand_total: subtotal - debt,
       payment_status: paymentStatus,
     };
@@ -211,6 +226,8 @@ function CalculateContent() {
       transaction_date: parsed.data.transaction_date,
       subtotal: parsed.data.subtotal,
       debt: parsed.data.debt,
+      debt_label: parsed.data.debt_label,
+      paid: parsed.data.paid,
       grand_total: parsed.data.grand_total,
       payment_status: parsed.data.payment_status,
       items: parsed.data.items,
@@ -250,6 +267,8 @@ function CalculateContent() {
   function handleNewTransaction() {
     dispatch({ type: "reset" });
     setDebt(0);
+    setDebtLabel("Hutang");
+    setPaid(0);
     setPaymentStatus("lunas");
     recipientForm.reset({
       recipient_name: "",
@@ -306,8 +325,13 @@ function CalculateContent() {
         <div className="space-y-4">
           <SummaryCard
             subtotal={subtotal}
+            totalKg={totalKg}
             debt={debt}
             onDebtChange={setDebt}
+            debtLabel={debtLabel}
+            onDebtLabelChange={setDebtLabel}
+            paid={paid}
+            onPaidChange={setPaid}
             paymentStatus={paymentStatus}
             onPaymentStatusChange={setPaymentStatus}
           />

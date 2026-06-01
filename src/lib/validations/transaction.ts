@@ -52,6 +52,13 @@ export const transactionSchema = z
       .number({ message: "Hutang harus berupa angka" })
       .min(0, "Hutang tidak boleh negatif")
       .default(0),
+    debt_label: z
+      .enum(["Hutang", "DP", "Panjar", "Pinjaman"])
+      .default("Hutang"),
+    paid: z
+      .number({ message: "Bayar harus berupa angka" })
+      .min(0, "Bayar tidak boleh negatif")
+      .default(0),
     grand_total: z
       .number({ message: "Grand total harus berupa angka" })
       .min(0, "Grand total harus >= 0"),
