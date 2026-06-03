@@ -15,6 +15,7 @@ export type Database = {
           full_name: string | null;
           email: string | null;
           company_name: string | null;
+          unit_label: string;
           created_at: string | null;
         };
         Insert: {
@@ -22,6 +23,7 @@ export type Database = {
           full_name?: string | null;
           email?: string | null;
           company_name?: string | null;
+          unit_label?: string;
           created_at?: string | null;
         };
         Update: {
@@ -29,6 +31,7 @@ export type Database = {
           full_name?: string | null;
           email?: string | null;
           company_name?: string | null;
+          unit_label?: string;
           created_at?: string | null;
         };
         Relationships: [
@@ -63,6 +66,35 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "products_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      recipients: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          name: string;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          name?: string;
+          created_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "recipients_user_id_fkey";
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "users";
@@ -212,6 +244,10 @@ export type ProfileUpdate = TablesUpdate<"profiles">;
 export type Product = Tables<"products">;
 export type ProductInsert = TablesInsert<"products">;
 export type ProductUpdate = TablesUpdate<"products">;
+
+export type Recipient = Tables<"recipients">;
+export type RecipientInsert = TablesInsert<"recipients">;
+export type RecipientUpdate = TablesUpdate<"recipients">;
 
 export type Transaction = Tables<"transactions">;
 export type TransactionInsert = TablesInsert<"transactions">;

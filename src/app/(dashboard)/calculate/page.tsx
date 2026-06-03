@@ -34,7 +34,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useCompanyName } from "@/lib/hooks/use-company-name";
+import { useProfileSettings } from "@/lib/hooks/use-company-name";
+import { getRecipients, createRecipient } from "@/lib/services/recipients";
 import {
   ItemsTable,
   type CalcItem,
@@ -103,7 +104,8 @@ function CalculateContent() {
   const [paymentStatus, setPaymentStatus] =
     React.useState<PaymentStatus>("lunas");
   const [products, setProducts] = React.useState<string[]>([]);
-  const companyName = useCompanyName();
+  const [recipients, setRecipients] = React.useState<string[]>([]);
+  const { companyName, unitLabel } = useProfileSettings();
   const [saving, setSaving] = React.useState(false);
   const [saved, setSaved] = React.useState<TransactionWithItems | null>(null);
   const [dialogOpen, setDialogOpen] = React.useState(false);
@@ -127,11 +129,37 @@ function CalculateContent() {
     [items]
   );
 
+  const loadRecipients = React.useCallback(() => {
+    getRecipients().then(({ data }) => {
+      if (data) setRecipients(data.map((r) => r.name));
+    });
+  }, []);
+
   React.useEffect(() => {
     getProducts().then(({ data }) => {
       if (data) setProducts(data.map((p) => p.name));
     });
-  }, []);
+    loadRecipients();
+  }, [loadRecipients]);
+
+  async function handleAddRecipient(name: string) {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      toast.error("Isi nama penerima dulu sebelum menyimpan.");
+      return;
+    }
+    if (recipients.some((r) => r.toLowerCase() === trimmed.toLowerCase())) {
+      toast.info("Nama penerima sudah tersimpan.");
+      return;
+    }
+    const { error } = await createRecipient(trimmed);
+    if (error) {
+      toast.error("Gagal menyimpan nama penerima", { description: error });
+      return;
+    }
+    toast.success("Nama penerima disimpan");
+    loadRecipients();
+  }
 
   // Mode edit: prefill form dari transaksi yang ada.
   React.useEffect(() => {
@@ -262,8 +290,6 @@ function CalculateContent() {
     setDialogOpen(true);
   }
 
-  const grandTotalNegative = subtotal - debt < 0;
-
   function handleNewTransaction() {
     dispatch({ type: "reset" });
     setDebt(0);
@@ -305,6 +331,7 @@ function CalculateContent() {
           <ItemsTable
             items={items}
             products={products}
+            unitLabel={unitLabel}
             onUpdateItem={(id, patch) => dispatch({ type: "update", id, patch })}
             onAddRow={() => dispatch({ type: "add" })}
             onRemoveRow={(id) => dispatch({ type: "remove", id })}
@@ -318,14 +345,19 @@ function CalculateContent() {
             <CardTitle>Data Penerima</CardTitle>
           </CardHeader>
           <CardContent>
-            <RecipientForm form={recipientForm} />
+            <RecipientForm
+              form={recipientForm}
+              recipients={recipients}
+              onAddRecipient={handleAddRecipient}
+            />
           </CardContent>
         </Card>
 
         <div className="space-y-4">
           <SummaryCard
             subtotal={subtotal}
-            totalKg={totalKg}
+            totalQty={totalKg}
+            unitLabel={unitLabel}
             debt={debt}
             onDebtChange={setDebt}
             debtLabel={debtLabel}
@@ -340,7 +372,7 @@ function CalculateContent() {
             className="w-full"
             size="lg"
             onClick={handleSave}
-            disabled={saving || grandTotalNegative}
+            disabled={saving}
           >
             {saving ? (
               <Loader2 className="size-4 animate-spin" />
@@ -376,7 +408,11 @@ function CalculateContent() {
           {saved && (
             <div className="space-y-4">
               <div className="flex justify-center overflow-x-auto rounded-lg border bg-white p-3">
-                <BonTemplate transaction={saved} companyName={companyName} />
+                <BonTemplate
+                  transaction={saved}
+                  companyName={companyName}
+                  unitLabel={unitLabel}
+                />
               </div>
 
               <ExportButtons transactionNumber={saved.transaction_number} />

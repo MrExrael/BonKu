@@ -33,13 +33,17 @@ const cell: React.CSSProperties = {
 export function BonTemplate({
   transaction,
   companyName = "Grosir barang",
+  unitLabel = "Kg",
 }: {
   transaction: TransactionWithItems;
   companyName?: string;
+  unitLabel?: string;
 }) {
   const items = transaction.transaction_items ?? [];
   const totalKg = items.reduce((sum, i) => sum + (i.weight_kg || 0), 0);
   const sisa = transaction.grand_total - transaction.paid;
+  const isDebtRemaining = transaction.grand_total < 0;
+  const isLunas = !isDebtRemaining && Math.abs(sisa) < 0.5;
   const time = formatTime(transaction.created_at);
   const dateValue = time
     ? `${formatDate(transaction.transaction_date)}, ${time}`
@@ -92,7 +96,7 @@ export function BonTemplate({
               Nama Barang
             </th>
             <th style={{ ...cell, textAlign: "right", borderBottom: `1px solid ${COLORS.line}`, fontWeight: 700 }}>
-              Kg
+              {unitLabel}
             </th>
             <th style={{ ...cell, textAlign: "right", borderBottom: `1px solid ${COLORS.line}`, fontWeight: 700 }}>
               Harga
@@ -123,7 +127,7 @@ export function BonTemplate({
         <tfoot>
           <tr>
             <td style={{ ...cell, fontWeight: 700, borderTop: `1px solid ${COLORS.line}` }}>
-              Total
+              Total {unitLabel}
             </td>
             <td style={{ ...cell, textAlign: "right", fontWeight: 700, borderTop: `1px solid ${COLORS.line}` }}>
               {formatNumber(totalKg, 3)}
@@ -146,16 +150,42 @@ export function BonTemplate({
           />
         ) : null}
         <div style={{ borderTop: `1px solid ${COLORS.line}`, margin: "6px 0" }} />
-        <SummaryRow
-          label="Grand Total"
-          value={formatRupiah(transaction.grand_total)}
-          bold
-        />
-        <SummaryRow label="Bayar" value={formatRupiah(transaction.paid)} />
-        <SummaryRow
-          label={sisa < 0 ? "Kembalian" : "Sisa"}
-          value={formatRupiah(Math.abs(sisa))}
-        />
+        {isDebtRemaining ? (
+          <div style={{ textAlign: "center", padding: "6px 0" }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#c0392b" }}>
+              Sisa Hutang
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: "#c0392b" }}>
+              {formatRupiah(transaction.grand_total)}
+            </div>
+          </div>
+        ) : (
+          <>
+            <SummaryRow
+              label="Grand Total"
+              value={formatRupiah(transaction.grand_total)}
+              bold
+            />
+            <SummaryRow label="Bayar" value={formatRupiah(transaction.paid)} />
+            <SummaryRow
+              label={sisa < 0 ? "Kembalian" : "Sisa"}
+              value={formatRupiah(Math.abs(sisa))}
+            />
+            {isLunas ? (
+              <div
+                style={{
+                  textAlign: "center",
+                  marginTop: 4,
+                  fontSize: 15,
+                  fontWeight: 800,
+                  color: "#1e8e5a",
+                }}
+              >
+                LUNAS
+              </div>
+            ) : null}
+          </>
+        )}
       </div>
 
       {/* Footer */}

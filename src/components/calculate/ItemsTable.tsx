@@ -28,6 +28,7 @@ export interface CalcItem {
 interface ItemsTableProps {
   items: CalcItem[];
   products: string[];
+  unitLabel: string;
   onUpdateItem: (id: string, patch: Partial<Omit<CalcItem, "id">>) => void;
   onAddRow: () => void;
   onRemoveRow: (id: string) => void;
@@ -122,6 +123,7 @@ function WeightInput({
 export function ItemsTable({
   items,
   products,
+  unitLabel,
   onUpdateItem,
   onAddRow,
   onRemoveRow,
@@ -138,7 +140,7 @@ export function ItemsTable({
             <TableRow>
               <TableHead className="w-10">No</TableHead>
               <TableHead className="min-w-40">Nama Barang</TableHead>
-              <TableHead className="w-24">Kg</TableHead>
+              <TableHead className="w-28 min-w-28">{unitLabel}</TableHead>
               <TableHead className="min-w-32">Harga (Rp)</TableHead>
               <TableHead className="min-w-32 text-right">Hasil (Rp)</TableHead>
               <TableHead className="w-12 text-center">Aksi</TableHead>
@@ -199,10 +201,10 @@ export function ItemsTable({
           <TableFooter>
             <TableRow>
               <TableCell colSpan={2} className="font-medium">
-                Total
+                Total {unitLabel}
               </TableCell>
               <TableCell className="font-medium tabular-nums">
-                {formatNumber(totalKg, 3)} kg
+                {formatNumber(totalKg, 3)}
               </TableCell>
               <TableCell />
               <TableCell className="text-right font-medium tabular-nums">

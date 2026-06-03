@@ -1,7 +1,5 @@
 "use client";
 
-import { AlertCircle } from "lucide-react";
-
 import { formatNumber, formatRupiah } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -24,7 +22,8 @@ export const DEBT_LABELS: DebtLabel[] = ["Hutang", "DP", "Panjar", "Pinjaman"];
 
 interface SummaryCardProps {
   subtotal: number;
-  totalKg: number;
+  totalQty: number;
+  unitLabel: string;
   debt: number;
   onDebtChange: (value: number) => void;
   debtLabel: DebtLabel;
@@ -37,7 +36,8 @@ interface SummaryCardProps {
 
 export function SummaryCard({
   subtotal,
-  totalKg,
+  totalQty,
+  unitLabel,
   debt,
   onDebtChange,
   debtLabel,
@@ -48,8 +48,9 @@ export function SummaryCard({
   onPaymentStatusChange,
 }: SummaryCardProps) {
   const grandTotal = subtotal - debt;
-  const isNegative = grandTotal < 0;
+  const isDebtRemaining = grandTotal < 0;
   const sisa = grandTotal - paid;
+  const isLunas = !isDebtRemaining && Math.abs(sisa) < 0.5;
 
   return (
     <Card>
@@ -62,9 +63,9 @@ export function SummaryCard({
         </div>
 
         <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Total Berat</span>
+          <span className="text-muted-foreground">Total {unitLabel}</span>
           <span className="font-medium tabular-nums">
-            {formatNumber(totalKg, 3)} kg
+            {formatNumber(totalQty, 3)}
           </span>
         </div>
 
@@ -91,14 +92,7 @@ export function SummaryCard({
             value={debt}
             onChange={onDebtChange}
             placeholder="Rp 0"
-            className={cn(isNegative && "border-destructive")}
           />
-          {isNegative && (
-            <p className="flex items-center gap-1.5 text-sm text-destructive">
-              <AlertCircle className="size-4" />
-              {debtLabel} tidak boleh melebihi subtotal.
-            </p>
-          )}
         </div>
 
         <div className="space-y-1.5">
@@ -123,34 +117,55 @@ export function SummaryCard({
 
         <Separator />
 
-        <div className="flex items-center justify-between">
-          <span className="font-semibold">Grand Total</span>
-          <span
-            className={cn(
-              "text-lg font-bold tabular-nums",
-              isNegative ? "text-destructive" : "text-foreground"
+        {isDebtRemaining ? (
+          <div className="flex flex-col items-center gap-1 py-2 text-center">
+            <span className="text-sm font-medium text-destructive">
+              Sisa Hutang
+            </span>
+            <span className="text-3xl font-bold tabular-nums text-destructive">
+              {formatRupiah(grandTotal)}
+            </span>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between">
+              <span className="font-semibold">Grand Total</span>
+              <span className="text-lg font-bold tabular-nums">
+                {formatRupiah(grandTotal)}
+              </span>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="paid-input">Bayar</Label>
+              <CurrencyInput
+                id="paid-input"
+                value={paid}
+                onChange={onPaidChange}
+                placeholder="Rp 0"
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span className="font-medium">
+                {sisa < 0 ? "Kembalian" : "Sisa"}
+              </span>
+              <span className="text-base font-semibold tabular-nums">
+                {formatRupiah(Math.abs(sisa))}
+              </span>
+            </div>
+
+            {isLunas && (
+              <p
+                className={cn(
+                  "text-center text-lg font-bold",
+                  "text-emerald-600 dark:text-emerald-400"
+                )}
+              >
+                LUNAS
+              </p>
             )}
-          >
-            {formatRupiah(grandTotal)}
-          </span>
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="paid-input">Bayar</Label>
-          <CurrencyInput
-            id="paid-input"
-            value={paid}
-            onChange={onPaidChange}
-            placeholder="Rp 0"
-          />
-        </div>
-
-        <div className="flex items-center justify-between">
-          <span className="font-medium">{sisa < 0 ? "Kembalian" : "Sisa"}</span>
-          <span className="text-base font-semibold tabular-nums">
-            {formatRupiah(Math.abs(sisa))}
-          </span>
-        </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );

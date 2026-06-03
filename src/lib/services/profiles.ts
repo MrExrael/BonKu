@@ -41,6 +41,7 @@ export async function updateProfile(data: {
   full_name?: string;
   email?: string;
   company_name?: string;
+  unit_label?: string;
 }): Promise<ServiceResult<Profile>> {
   try {
     const supabase = createClient();

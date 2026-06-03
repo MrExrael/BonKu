@@ -8,6 +8,7 @@
 -- -----------------------------------------------------------------------------
 alter table public.profiles            enable row level security;
 alter table public.products            enable row level security;
+alter table public.recipients          enable row level security;
 alter table public.transactions        enable row level security;
 alter table public.transaction_items   enable row level security;
 
@@ -34,6 +35,16 @@ create policy "profiles_update_own"
 drop policy if exists "products_all_own" on public.products;
 create policy "products_all_own"
   on public.products
+  for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+-- -----------------------------------------------------------------------------
+-- recipients: full akses (ALL) hanya untuk baris milik user.
+-- -----------------------------------------------------------------------------
+drop policy if exists "recipients_all_own" on public.recipients;
+create policy "recipients_all_own"
+  on public.recipients
   for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);

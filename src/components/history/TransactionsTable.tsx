@@ -37,7 +37,7 @@ import {
   deleteTransaction,
   type TransactionWithItems,
 } from "@/lib/services/transactions";
-import { useCompanyName } from "@/lib/hooks/use-company-name";
+import { useProfileSettings } from "@/lib/hooks/use-company-name";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -90,7 +90,7 @@ export function TransactionsTable({
   onChanged,
 }: TransactionsTableProps) {
   const router = useRouter();
-  const companyName = useCompanyName();
+  const { companyName, unitLabel } = useProfileSettings();
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "transaction_date", desc: true },
   ]);
@@ -410,7 +410,11 @@ export function TransactionsTable({
           {activeTx && (
             <div className="space-y-4">
               <div className="flex justify-center overflow-x-auto rounded-lg border bg-white p-3">
-                <BonTemplate transaction={activeTx} companyName={companyName} />
+                <BonTemplate
+                  transaction={activeTx}
+                  companyName={companyName}
+                  unitLabel={unitLabel}
+                />
               </div>
               <ExportButtons transactionNumber={activeTx.transaction_number} />
             </div>

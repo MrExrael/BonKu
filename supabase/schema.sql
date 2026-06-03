@@ -12,6 +12,7 @@ create table if not exists public.profiles (
   full_name    text,
   email        text,
   company_name text,
+  unit_label   text not null default 'Kg',
   created_at   timestamptz default now()
 );
 
@@ -27,6 +28,19 @@ create table if not exists public.products (
 );
 
 create index if not exists idx_products_user_id on public.products (user_id);
+
+-- -----------------------------------------------------------------------------
+-- Tabel: recipients
+-- Master daftar nama penerima milik tiap user (untuk autocomplete + simpan).
+-- -----------------------------------------------------------------------------
+create table if not exists public.recipients (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references auth.users (id) on delete cascade,
+  name       text not null,
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_recipients_user_id on public.recipients (user_id);
 
 -- -----------------------------------------------------------------------------
 -- Tabel: transactions

@@ -1,8 +1,11 @@
 "use client";
 
+import * as React from "react";
 import type { UseFormReturn } from "react-hook-form";
+import { Plus } from "lucide-react";
 
 import type { RecipientInput } from "@/lib/validations/transaction";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -18,16 +21,29 @@ import {
 /**
  * Form data penerima. Instance form dimiliki oleh halaman (calculate/page.tsx)
  * sehingga nilai & validasinya bisa digabung saat menyimpan transaksi.
+ *
+ * `recipients` = daftar nama tersimpan untuk autocomplete; `onAddRecipient`
+ * menyimpan nama yang sedang diketik agar bisa dipakai lagi nanti.
  */
 export function RecipientForm({
   form,
+  recipients,
+  onAddRecipient,
 }: {
   form: UseFormReturn<RecipientInput>;
+  recipients: string[];
+  onAddRecipient: (name: string) => void;
 }) {
   const notes = form.watch("notes") ?? "";
+  const datalistId = React.useId();
 
   return (
     <Form {...form}>
+      <datalist id={datalistId}>
+        {recipients.map((name) => (
+          <option key={name} value={name} />
+        ))}
+      </datalist>
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField
           control={form.control}
@@ -35,9 +51,25 @@ export function RecipientForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Nama Penerima</FormLabel>
-              <FormControl>
-                <Input placeholder="Nama penerima" {...field} />
-              </FormControl>
+              <div className="flex gap-2">
+                <FormControl>
+                  <Input
+                    list={datalistId}
+                    placeholder="Cari / ketik nama penerima"
+                    {...field}
+                  />
+                </FormControl>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  aria-label="Simpan nama penerima"
+                  title="Simpan nama penerima"
+                  onClick={() => onAddRecipient(field.value?.trim() ?? "")}
+                >
+                  <Plus className="size-4" />
+                </Button>
+              </div>
               <FormMessage />
             </FormItem>
           )}

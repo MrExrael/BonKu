@@ -5,23 +5,42 @@ import * as React from "react";
 import { getProfile } from "@/lib/services/profiles";
 
 export const DEFAULT_COMPANY_NAME = "Grosir barang";
+export const DEFAULT_UNIT_LABEL = "Kg";
+
+export interface BonSettings {
+  companyName: string;
+  unitLabel: string;
+}
 
 /**
- * Mengambil nama perusahaan user yang login (dari profiles.company_name).
- * Dipakai untuk menampilkan nama perusahaan pada bon/cetak.
+ * Mengambil pengaturan bon dari profil user: nama perusahaan + satuan
+ * (Kg/Qty/Jumlah). Dipakai untuk menampilkan bon (cetak/ekspor) dan kolom
+ * kuantitas di halaman menghitung.
  */
-export function useCompanyName(): string {
-  const [name, setName] = React.useState(DEFAULT_COMPANY_NAME);
+export function useProfileSettings(): BonSettings {
+  const [settings, setSettings] = React.useState<BonSettings>({
+    companyName: DEFAULT_COMPANY_NAME,
+    unitLabel: DEFAULT_UNIT_LABEL,
+  });
 
   React.useEffect(() => {
     let active = true;
     getProfile().then(({ data }) => {
-      if (active && data?.company_name) setName(data.company_name);
+      if (!active || !data) return;
+      setSettings({
+        companyName: data.company_name || DEFAULT_COMPANY_NAME,
+        unitLabel: data.unit_label || DEFAULT_UNIT_LABEL,
+      });
     });
     return () => {
       active = false;
     };
   }, []);
 
-  return name;
+  return settings;
+}
+
+/** Hook ringkas khusus nama perusahaan (kompatibilitas). */
+export function useCompanyName(): string {
+  return useProfileSettings().companyName;
 }

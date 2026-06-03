@@ -59,14 +59,9 @@ export const transactionSchema = z
       .number({ message: "Bayar harus berupa angka" })
       .min(0, "Bayar tidak boleh negatif")
       .default(0),
-    grand_total: z
-      .number({ message: "Grand total harus berupa angka" })
-      .min(0, "Grand total harus >= 0"),
+    // Grand total boleh negatif → ditampilkan sebagai "Sisa Hutang".
+    grand_total: z.number({ message: "Grand total harus berupa angka" }),
     payment_status: z.enum(["lunas", "belum_lunas"]).default("lunas"),
-  })
-  .refine((data) => data.subtotal - data.debt >= 0, {
-    message: "Subtotal dikurangi hutang tidak boleh negatif",
-    path: ["debt"],
   });
 
 /**
