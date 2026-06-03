@@ -42,6 +42,8 @@ interface BackupTransaction {
   notes?: string | null;
   transaction_date: string;
   subtotal: number;
+  ppn_percent?: number;
+  ppn_amount?: number;
   debt: number;
   debt_label?: string;
   paid?: number;
@@ -106,6 +108,8 @@ export function BackupRestore() {
         notes: tx.notes,
         transaction_date: tx.transaction_date,
         subtotal: tx.subtotal,
+        ppn_percent: tx.ppn_percent,
+        ppn_amount: tx.ppn_amount,
         debt: tx.debt,
         debt_label: tx.debt_label,
         paid: tx.paid,
@@ -175,6 +179,8 @@ export function BackupRestore() {
         notes: tx.notes ?? null,
         transaction_date: tx.transaction_date,
         subtotal: tx.subtotal,
+        ppn_percent: tx.ppn_percent ?? 0,
+        ppn_amount: tx.ppn_amount ?? 0,
         debt: tx.debt,
         debt_label: tx.debt_label || "Hutang",
         paid: tx.paid ?? 0,

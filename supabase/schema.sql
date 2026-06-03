@@ -13,6 +13,8 @@ create table if not exists public.profiles (
   email        text,
   company_name text,
   unit_label   text not null default 'Kg',
+  ppn_enabled  boolean not null default false,
+  ppn_percent  numeric(5, 2) not null default 11,
   created_at   timestamptz default now()
 );
 
@@ -54,6 +56,8 @@ create table if not exists public.transactions (
   phone              text,
   notes              text,
   subtotal           numeric(15, 2) not null default 0,
+  ppn_percent        numeric(5, 2) not null default 0,
+  ppn_amount         numeric(15, 2) not null default 0,
   debt               numeric(15, 2) not null default 0,
   debt_label         text not null default 'Hutang',
   paid               numeric(15, 2) not null default 0,

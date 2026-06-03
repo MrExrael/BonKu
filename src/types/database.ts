@@ -16,6 +16,8 @@ export type Database = {
           email: string | null;
           company_name: string | null;
           unit_label: string;
+          ppn_enabled: boolean;
+          ppn_percent: number;
           created_at: string | null;
         };
         Insert: {
@@ -24,6 +26,8 @@ export type Database = {
           email?: string | null;
           company_name?: string | null;
           unit_label?: string;
+          ppn_enabled?: boolean;
+          ppn_percent?: number;
           created_at?: string | null;
         };
         Update: {
@@ -32,6 +36,8 @@ export type Database = {
           email?: string | null;
           company_name?: string | null;
           unit_label?: string;
+          ppn_enabled?: boolean;
+          ppn_percent?: number;
           created_at?: string | null;
         };
         Relationships: [
@@ -111,6 +117,8 @@ export type Database = {
           phone: string | null;
           notes: string | null;
           subtotal: number;
+          ppn_percent: number;
+          ppn_amount: number;
           debt: number;
           debt_label: string;
           paid: number;
@@ -127,6 +135,8 @@ export type Database = {
           phone?: string | null;
           notes?: string | null;
           subtotal?: number;
+          ppn_percent?: number;
+          ppn_amount?: number;
           debt?: number;
           debt_label?: string;
           paid?: number;
@@ -143,6 +153,8 @@ export type Database = {
           phone?: string | null;
           notes?: string | null;
           subtotal?: number;
+          ppn_percent?: number;
+          ppn_amount?: number;
           debt?: number;
           debt_label?: string;
           paid?: number;

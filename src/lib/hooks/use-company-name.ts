@@ -10,6 +10,8 @@ export const DEFAULT_UNIT_LABEL = "Kg";
 export interface BonSettings {
   companyName: string;
   unitLabel: string;
+  ppnEnabled: boolean;
+  ppnPercent: number;
 }
 
 /**
@@ -21,6 +23,8 @@ export function useProfileSettings(): BonSettings {
   const [settings, setSettings] = React.useState<BonSettings>({
     companyName: DEFAULT_COMPANY_NAME,
     unitLabel: DEFAULT_UNIT_LABEL,
+    ppnEnabled: false,
+    ppnPercent: 0,
   });
 
   React.useEffect(() => {
@@ -30,6 +34,8 @@ export function useProfileSettings(): BonSettings {
       setSettings({
         companyName: data.company_name || DEFAULT_COMPANY_NAME,
         unitLabel: data.unit_label || DEFAULT_UNIT_LABEL,
+        ppnEnabled: Boolean(data.ppn_enabled),
+        ppnPercent: Number(data.ppn_percent) || 0,
       });
     });
     return () => {

@@ -42,6 +42,8 @@ export async function updateProfile(data: {
   email?: string;
   company_name?: string;
   unit_label?: string;
+  ppn_enabled?: boolean;
+  ppn_percent?: number;
 }): Promise<ServiceResult<Profile>> {
   try {
     const supabase = createClient();

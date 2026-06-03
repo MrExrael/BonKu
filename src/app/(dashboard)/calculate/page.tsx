@@ -105,7 +105,8 @@ function CalculateContent() {
     React.useState<PaymentStatus>("lunas");
   const [products, setProducts] = React.useState<string[]>([]);
   const [recipients, setRecipients] = React.useState<string[]>([]);
-  const { companyName, unitLabel } = useProfileSettings();
+  const { companyName, unitLabel, ppnEnabled, ppnPercent } =
+    useProfileSettings();
   const [saving, setSaving] = React.useState(false);
   const [saved, setSaved] = React.useState<TransactionWithItems | null>(null);
   const [dialogOpen, setDialogOpen] = React.useState(false);
@@ -128,6 +129,7 @@ function CalculateContent() {
     () => items.reduce((sum, item) => sum + (item.weight_kg || 0), 0),
     [items]
   );
+  const ppnAmount = ppnEnabled ? (subtotal * ppnPercent) / 100 : 0;
 
   const loadRecipients = React.useCallback(() => {
     getRecipients().then(({ data }) => {
@@ -232,10 +234,12 @@ function CalculateContent() {
       notes: values.notes || undefined,
       transaction_date: values.transaction_date,
       subtotal,
+      ppn_percent: ppnEnabled ? ppnPercent : 0,
+      ppn_amount: ppnAmount,
       debt,
       debt_label: debtLabel,
       paid,
-      grand_total: subtotal - debt,
+      grand_total: subtotal - ppnAmount - debt,
       payment_status: paymentStatus,
     };
 
@@ -253,6 +257,8 @@ function CalculateContent() {
       notes: parsed.data.notes ?? null,
       transaction_date: parsed.data.transaction_date,
       subtotal: parsed.data.subtotal,
+      ppn_percent: parsed.data.ppn_percent,
+      ppn_amount: parsed.data.ppn_amount,
       debt: parsed.data.debt,
       debt_label: parsed.data.debt_label,
       paid: parsed.data.paid,
@@ -358,6 +364,9 @@ function CalculateContent() {
             subtotal={subtotal}
             totalQty={totalKg}
             unitLabel={unitLabel}
+            ppnEnabled={ppnEnabled}
+            ppnPercent={ppnPercent}
+            ppnAmount={ppnAmount}
             debt={debt}
             onDebtChange={setDebt}
             debtLabel={debtLabel}

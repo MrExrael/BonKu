@@ -143,6 +143,12 @@ export function BonTemplate({
       {/* Summary */}
       <div style={{ marginTop: 12 }}>
         <SummaryRow label="Subtotal" value={formatRupiah(transaction.subtotal)} />
+        {transaction.ppn_amount > 0 ? (
+          <SummaryRow
+            label={`PPN (${formatNumber(transaction.ppn_percent, 2)}%)`}
+            value={`-${formatRupiah(transaction.ppn_amount)}`}
+          />
+        ) : null}
         {transaction.debt > 0 ? (
           <SummaryRow
             label={transaction.debt_label || "Hutang"}

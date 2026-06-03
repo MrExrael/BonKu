@@ -14,6 +14,7 @@ import {
 import { BackupRestore } from "@/components/settings/BackupRestore";
 import { CompanySettings } from "@/components/settings/CompanySettings";
 import { UnitSettings } from "@/components/settings/UnitSettings";
+import { PpnSettings } from "@/components/settings/PpnSettings";
 
 export default function SettingsPage() {
   return (
@@ -34,6 +35,7 @@ export default function SettingsPage() {
         <TabsContent value="akun" className="mt-4 space-y-4">
           <CompanySettings />
           <UnitSettings />
+          <PpnSettings />
 
           <Card>
             <CardHeader>

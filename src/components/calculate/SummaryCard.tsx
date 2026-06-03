@@ -24,6 +24,9 @@ interface SummaryCardProps {
   subtotal: number;
   totalQty: number;
   unitLabel: string;
+  ppnEnabled: boolean;
+  ppnPercent: number;
+  ppnAmount: number;
   debt: number;
   onDebtChange: (value: number) => void;
   debtLabel: DebtLabel;
@@ -38,6 +41,9 @@ export function SummaryCard({
   subtotal,
   totalQty,
   unitLabel,
+  ppnEnabled,
+  ppnPercent,
+  ppnAmount,
   debt,
   onDebtChange,
   debtLabel,
@@ -47,7 +53,7 @@ export function SummaryCard({
   paymentStatus,
   onPaymentStatusChange,
 }: SummaryCardProps) {
-  const grandTotal = subtotal - debt;
+  const grandTotal = subtotal - ppnAmount - debt;
   const isDebtRemaining = grandTotal < 0;
   const sisa = grandTotal - paid;
   const isLunas = !isDebtRemaining && Math.abs(sisa) < 0.5;
@@ -68,6 +74,17 @@ export function SummaryCard({
             {formatNumber(totalQty, 3)}
           </span>
         </div>
+
+        {ppnEnabled && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">
+              PPN ({formatNumber(ppnPercent, 2)}%)
+            </span>
+            <span className="font-medium tabular-nums text-destructive">
+              -{formatRupiah(ppnAmount)}
+            </span>
+          </div>
+        )}
 
         <div className="space-y-1.5">
           <div className="flex items-center justify-between gap-2">

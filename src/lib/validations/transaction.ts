@@ -48,6 +48,8 @@ export const transactionSchema = z
     subtotal: z
       .number({ message: "Subtotal harus berupa angka" })
       .min(0, "Subtotal tidak boleh negatif"),
+    ppn_percent: z.number().min(0).default(0),
+    ppn_amount: z.number().min(0).default(0),
     debt: z
       .number({ message: "Hutang harus berupa angka" })
       .min(0, "Hutang tidak boleh negatif")
