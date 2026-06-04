@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
@@ -89,6 +89,10 @@ function itemsReducer(state: CalcItem[], action: ItemsAction): CalcItem[] {
   }
 }
 
+// Key localStorage untuk menyimpan draft transaksi yang belum disimpan,
+// supaya tidak hilang saat pindah tab atau refresh.
+const DRAFT_KEY = "bonku-calculate-draft";
+
 function CalculateContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -110,6 +114,9 @@ function CalculateContent() {
   const [saving, setSaving] = React.useState(false);
   const [saved, setSaved] = React.useState<TransactionWithItems | null>(null);
   const [dialogOpen, setDialogOpen] = React.useState(false);
+  // Penanda bahwa draft (jika ada) sudah dipulihkan, agar penyimpanan draft
+  // tidak menimpa data tersimpan dengan nilai default saat mount.
+  const [restored, setRestored] = React.useState(false);
 
   const recipientForm = useForm<RecipientInput>({
     resolver: zodResolver(recipientSchema),
@@ -120,6 +127,7 @@ function CalculateContent() {
       transaction_date: formatDateInput(new Date()),
     },
   });
+  const recipientValues = useWatch({ control: recipientForm.control });
 
   const subtotal = React.useMemo(
     () => items.reduce((sum, item) => sum + item.total, 0),
@@ -143,6 +151,68 @@ function CalculateContent() {
     });
     loadRecipients();
   }, [loadRecipients]);
+
+  // Pulihkan draft dari localStorage saat mount (kecuali mode edit).
+  React.useEffect(() => {
+    if (editId) {
+      setRestored(true);
+      return;
+    }
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (Array.isArray(d.items) && d.items.length > 0) {
+          dispatch({ type: "load", items: d.items });
+        }
+        if (typeof d.debt === "number") setDebt(d.debt);
+        if (d.debtLabel) setDebtLabel(d.debtLabel as DebtLabel);
+        if (typeof d.paid === "number") setPaid(d.paid);
+        if (d.paymentStatus) setPaymentStatus(d.paymentStatus as PaymentStatus);
+        if (d.recipient) {
+          recipientForm.reset({
+            recipient_name: d.recipient.recipient_name ?? "",
+            phone: d.recipient.phone ?? "",
+            notes: d.recipient.notes ?? "",
+            transaction_date:
+              d.recipient.transaction_date || formatDateInput(new Date()),
+          });
+        }
+      }
+    } catch {
+      /* abaikan draft rusak */
+    }
+    setRestored(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editId]);
+
+  // Simpan draft otomatis setiap ada perubahan (setelah restore selesai).
+  React.useEffect(() => {
+    if (!restored || editId) return;
+    try {
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({
+          items,
+          debt,
+          debtLabel,
+          paid,
+          paymentStatus,
+          recipient: recipientValues,
+        })
+      );
+    } catch {
+      /* storage penuh / tidak tersedia */
+    }
+  }, [restored, editId, items, debt, debtLabel, paid, paymentStatus, recipientValues]);
+
+  function clearDraft() {
+    try {
+      localStorage.removeItem(DRAFT_KEY);
+    } catch {
+      /* abaikan */
+    }
+  }
 
   async function handleAddRecipient(name: string) {
     const trimmed = name.trim();
@@ -292,11 +362,14 @@ function CalculateContent() {
     toast.success("Transaksi berhasil disimpan", {
       description: data.transaction_number,
     });
+    // Transaksi sudah tersimpan ke DB → buang draft.
+    clearDraft();
     setSaved(data);
     setDialogOpen(true);
   }
 
   function handleNewTransaction() {
+    clearDraft();
     dispatch({ type: "reset" });
     setDebt(0);
     setDebtLabel("Hutang");
