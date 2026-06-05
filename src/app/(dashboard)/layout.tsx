@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Sidebar, type SidebarUser } from "@/components/layout/Sidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { WhatsNew } from "@/components/layout/WhatsNew";
 
 /**
  * Layout area dashboard.
@@ -49,6 +50,7 @@ export default async function DashboardLayout({
         </main>
       </div>
       <BottomNav />
+      <WhatsNew />
     </div>
   );
 }

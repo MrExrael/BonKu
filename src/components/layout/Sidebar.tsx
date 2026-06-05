@@ -11,8 +11,10 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { APP_VERSION } from "@/lib/changelog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { OPEN_CHANGELOG_EVENT } from "@/components/layout/WhatsNew";
 
 export interface SidebarUser {
   name: string;
@@ -99,6 +101,15 @@ export function Sidebar({ user }: { user: SidebarUser }) {
           </Link>
           <ThemeToggle />
         </div>
+        <button
+          type="button"
+          onClick={() =>
+            window.dispatchEvent(new Event(OPEN_CHANGELOG_EVENT))
+          }
+          className="mt-2 w-full text-left text-xs text-muted-foreground transition-colors hover:text-foreground"
+        >
+          v{APP_VERSION} · Apa yang baru?
+        </button>
       </div>
     </aside>
   );

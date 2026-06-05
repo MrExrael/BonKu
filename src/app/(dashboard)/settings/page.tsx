@@ -16,6 +16,7 @@ import { CompanySettings } from "@/components/settings/CompanySettings";
 import { UnitSettings } from "@/components/settings/UnitSettings";
 import { PpnSettings } from "@/components/settings/PpnSettings";
 import { TrashManager } from "@/components/settings/TrashManager";
+import { WhatsNewButton } from "@/components/layout/WhatsNewButton";
 
 export default function SettingsPage() {
   return (
@@ -80,12 +81,17 @@ export default function SettingsPage() {
                 <ChevronRight className="size-4 text-muted-foreground" />
               </Link>
 
-              <Link
-                href="/profile"
-                className={cn(buttonVariants({ variant: "outline" }), "mt-1")}
-              >
-                Buka Halaman Profil
-              </Link>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  href="/profile"
+                  className={cn(buttonVariants({ variant: "outline" }), "mt-1")}
+                >
+                  Buka Halaman Profil
+                </Link>
+                <span className="mt-1">
+                  <WhatsNewButton />
+                </span>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
