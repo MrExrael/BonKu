@@ -220,6 +220,17 @@ export function TransactionsTable({
         enableSorting: false,
         header: () => "Status",
         cell: ({ row }) => {
+          // Grand total negatif = masih berhutang (Sisa Hutang) → "Hutang".
+          if (row.original.grand_total < 0) {
+            return (
+              <Badge
+                variant="outline"
+                className="border-destructive/30 bg-destructive/10 text-destructive"
+              >
+                Hutang
+              </Badge>
+            );
+          }
           const paid = row.original.payment_status !== "belum_lunas";
           return (
             <Badge

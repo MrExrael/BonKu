@@ -122,6 +122,7 @@ function HistoryContent() {
           <TabsTrigger value="all">Semua</TabsTrigger>
           <TabsTrigger value="lunas">Lunas</TabsTrigger>
           <TabsTrigger value="belum_lunas">Belum Lunas</TabsTrigger>
+          <TabsTrigger value="hutang">Hutang</TabsTrigger>
         </TabsList>
       </Tabs>
 

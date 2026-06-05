@@ -8,6 +8,7 @@ import { formatDate, formatRupiah } from "@/lib/utils/format";
 import {
   getDeletedTransactions,
   permanentDeleteTransaction,
+  purgeExpiredTrash,
   restoreTransaction,
   type TransactionWithItems,
 } from "@/lib/services/transactions";
@@ -42,10 +43,19 @@ export default function TrashPage() {
 
   const load = React.useCallback(async () => {
     setLoading(true);
+    // Bersihkan dulu sampah yang sudah lewat 30 hari, lalu ambil sisanya.
+    await purgeExpiredTrash(30);
     const { data: result } = await getDeletedTransactions();
     setData(result ?? []);
     setLoading(false);
   }, []);
+
+  // Sisa hari sebelum dihapus permanen (30 hari sejak dihapus).
+  function daysLeft(deletedAt: string | null): number {
+    if (!deletedAt) return 30;
+    const elapsed = (Date.now() - new Date(deletedAt).getTime()) / 86400000;
+    return Math.max(0, Math.ceil(30 - elapsed));
+  }
 
   React.useEffect(() => {
     load();
@@ -82,7 +92,8 @@ export default function TrashPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Sampah</h1>
         <p className="text-sm text-muted-foreground">
-          Transaksi yang dihapus disimpan di sini. Pulihkan atau hapus permanen.
+          Transaksi yang dihapus disimpan di sini dan akan terhapus permanen
+          otomatis setelah 30 hari. Pulihkan sebelum itu jika masih dibutuhkan.
         </p>
       </div>
 
@@ -112,6 +123,7 @@ export default function TrashPage() {
                 <TableHead>Nama Penerima</TableHead>
                 <TableHead>Tanggal</TableHead>
                 <TableHead className="text-right">Grand Total</TableHead>
+                <TableHead className="text-center">Auto-hapus</TableHead>
                 <TableHead className="text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>
@@ -125,6 +137,9 @@ export default function TrashPage() {
                   <TableCell>{formatDate(tx.transaction_date)}</TableCell>
                   <TableCell className="text-right tabular-nums">
                     {formatRupiah(tx.grand_total)}
+                  </TableCell>
+                  <TableCell className="text-center text-xs text-muted-foreground">
+                    {daysLeft(tx.deleted_at)} hari
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-1">

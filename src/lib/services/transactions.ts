@@ -19,7 +19,7 @@ export interface TransactionFilters {
   dateFrom?: string;
   dateTo?: string;
   recipientName?: string;
-  status?: "lunas" | "belum_lunas";
+  status?: "lunas" | "belum_lunas" | "hutang";
 }
 
 /** Input pembuatan transaksi: header tanpa user_id & transaction_number (auto), plus items. */
@@ -85,7 +85,10 @@ export async function getTransactions(
     if (filters.dateTo) {
       query = query.lte("transaction_date", filters.dateTo);
     }
-    if (filters.status) {
+    if (filters.status === "hutang") {
+      // "Hutang" = grand total negatif (masih berhutang / Sisa Hutang).
+      query = query.lt("grand_total", 0);
+    } else if (filters.status) {
       query = query.eq("payment_status", filters.status);
     }
 
@@ -315,6 +318,40 @@ export async function getDeletedTransactions(): Promise<
     if (error) throw error;
 
     return { data: (data ?? []) as TransactionWithItems[], error: null };
+  } catch (err) {
+    return { data: null, error: errorMessage(err) };
+  }
+}
+
+/**
+ * Hapus permanen otomatis transaksi yang sudah di Sampah lebih dari `days` hari
+ * (default 30). Dipanggil saat membuka halaman Sampah.
+ */
+export async function purgeExpiredTrash(
+  days = 30
+): Promise<ServiceResult<boolean>> {
+  try {
+    const supabase = createClient();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    if (!user) throw new Error("Tidak ada user yang sedang login");
+
+    const cutoff = new Date(
+      Date.now() - days * 24 * 60 * 60 * 1000
+    ).toISOString();
+
+    const { error } = await supabase
+      .from("transactions")
+      .delete()
+      .eq("user_id", user.id)
+      .not("deleted_at", "is", null)
+      .lt("deleted_at", cutoff);
+    if (error) throw error;
+
+    return { data: true, error: null };
   } catch (err) {
     return { data: null, error: errorMessage(err) };
   }

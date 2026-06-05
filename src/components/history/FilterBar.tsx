@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export type StatusFilter = "" | "lunas" | "belum_lunas";
+export type StatusFilter = "" | "lunas" | "belum_lunas" | "hutang";
 
 export interface HistoryFilters {
   search: string;
