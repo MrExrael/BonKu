@@ -36,12 +36,8 @@ const PAPER_MM: Record<Exclude<PaperSize, "current">, [number, number]> = {
 
 const PAGE_MARGIN_MM = 8;
 
-/** Ekspor canvas menjadi PDF. Ukuran halaman: asli bon, atau A5/A6. */
-export async function exportToPDF(
-  canvas: HTMLCanvasElement,
-  filename: string,
-  size: PaperSize = "current"
-): Promise<void> {
+/** Bangun dokumen jsPDF dari canvas, ukuran asli bon atau A5/A6. */
+async function makePdf(canvas: HTMLCanvasElement, size: PaperSize) {
   const { jsPDF } = await import("jspdf");
   const imgData = canvas.toDataURL("image/png");
 
@@ -54,8 +50,7 @@ export async function exportToPDF(
       format: [canvas.width, canvas.height],
     });
     pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
-    pdf.save(ensureExtension(filename, "pdf"));
-    return;
+    return pdf;
   }
 
   // A5 / A6: tempatkan bon di tengah-atas halaman dengan margin.
@@ -72,9 +67,17 @@ export async function exportToPDF(
     drawH = maxH;
     drawW = drawH / ratio;
   }
-  const x = (pageW - drawW) / 2;
-  const y = PAGE_MARGIN_MM;
-  pdf.addImage(imgData, "PNG", x, y, drawW, drawH);
+  pdf.addImage(imgData, "PNG", (pageW - drawW) / 2, PAGE_MARGIN_MM, drawW, drawH);
+  return pdf;
+}
+
+/** Ekspor canvas menjadi PDF. Ukuran halaman: asli bon, atau A5/A6. */
+export async function exportToPDF(
+  canvas: HTMLCanvasElement,
+  filename: string,
+  size: PaperSize = "current"
+): Promise<void> {
+  const pdf = await makePdf(canvas, size);
   pdf.save(ensureExtension(filename, "pdf"));
 }
 
@@ -155,16 +158,106 @@ function ensureExtension(filename: string, ext: string): string {
     : `${filename}.${ext}`;
 }
 
+function canvasToBlob(
+  canvas: HTMLCanvasElement,
+  type: string,
+  quality?: number
+): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("Gagal membuat gambar"))),
+      type,
+      quality
+    );
+  });
+}
+
+function downloadFile(file: File) {
+  const url = URL.createObjectURL(file);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = file.name;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/** Normalisasi nomor telepon Indonesia untuk wa.me (tanpa +, awalan 62). */
+function normalizeWaPhone(phone: string): string {
+  let d = phone.replace(/\D/g, "");
+  if (d.startsWith("0")) d = "62" + d.slice(1);
+  else if (d.startsWith("8")) d = "62" + d;
+  return d;
+}
+
+export type WhatsAppResult = "shared" | "cancelled" | "fallback";
+
+/**
+ * Kirim bon ke WhatsApp sebagai file JPG atau PDF.
+ *
+ * Di HP yang mendukung Web Share API (Android/iOS), akan membuka share sheet
+ * dengan file terlampir → pilih WhatsApp → file langsung menempel.
+ * Jika tidak didukung (mis. desktop), file diunduh lalu wa.me dibuka agar bisa
+ * dilampirkan manual.
+ */
+export async function shareToWhatsApp(
+  canvas: HTMLCanvasElement,
+  baseName: string,
+  format: "jpg" | "pdf",
+  opts: { size?: PaperSize; phone?: string | null; message?: string } = {}
+): Promise<WhatsAppResult> {
+  const size = opts.size ?? "current";
+  let file: File;
+
+  if (format === "pdf") {
+    const pdf = await makePdf(canvas, size);
+    const blob = pdf.output("blob");
+    file = new File([blob], ensureExtension(baseName, "pdf"), {
+      type: "application/pdf",
+    });
+  } else {
+    const source = size === "current" ? flatten(canvas, "jpg") : paged(canvas, size);
+    const blob = await canvasToBlob(source, "image/jpeg", 0.95);
+    file = new File([blob], ensureExtension(baseName, "jpg"), {
+      type: "image/jpeg",
+    });
+  }
+
+  const nav = navigator as Navigator & {
+    canShare?: (data?: ShareData) => boolean;
+  };
+  if (
+    typeof nav.share === "function" &&
+    typeof nav.canShare === "function" &&
+    nav.canShare({ files: [file] })
+  ) {
+    try {
+      await nav.share({ files: [file], title: baseName, text: opts.message });
+      return "shared";
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") return "cancelled";
+      // selain dibatalkan → lanjut ke fallback
+    }
+  }
+
+  // Fallback: unduh file + buka WhatsApp (lampirkan manual).
+  downloadFile(file);
+  const text = encodeURIComponent(opts.message ?? "");
+  const url = opts.phone
+    ? `https://wa.me/${normalizeWaPhone(opts.phone)}?text=${text}`
+    : `https://wa.me/?text=${text}`;
+  window.open(url, "_blank");
+  return "fallback";
+}
+
 /**
  * Cetak hanya elemen tertentu (mis. bon) dengan membuka jendela baru berisi
  * markup elemen tsb lalu memanggil print. Cara ini menghindari masalah layout
  * saat elemen berada di dalam Dialog ber-transform (print jadi mungil/landscape).
  * Jika popup diblokir, fallback ke window.print().
  */
-export function printElement(
-  elementId: string,
-  size: PaperSize = "current"
-): void {
+export function printElement(elementId: string): void {
   const element = document.getElementById(elementId);
   if (!element) {
     window.print();
@@ -178,17 +271,23 @@ export function printElement(
     return;
   }
 
-  // Untuk A5/A6: set ukuran halaman + skала bon agar muat di lebar kertas,
-  // sehingga pratinjau cetak tampil sesuai ukuran kertas.
-  let pageCss = "@page{margin:10mm}";
-  let scaleCss = "";
-  if (size !== "current") {
-    const widthMm = PAPER_MM[size][0];
-    const contentPx = ((widthMm - 16) / 25.4) * 96; // dikurangi margin 8mm*2
-    const factor = Math.min(1, contentPx / 400); // bon lebar 400px
-    pageCss = `@page{size:${size};margin:8mm}`;
-    scaleCss = `#${elementId}{transform:scale(${factor});transform-origin:top center}`;
-  }
+  const pageCss = "@page{margin:10mm}";
+  const scaleCss = "";
+
+  // --- (DINONAKTIFKAN) Pratinjau cetak sesuai ukuran A5/A6 ---
+  // Untuk mengaktifkan kembali: tambahkan parameter `size: PaperSize = "current"`
+  // pada printElement, teruskan `size` dari ExportButtons.handlePrint, lalu
+  // ganti dua baris `const` di atas dengan blok berikut:
+  //
+  // let pageCss = "@page{margin:10mm}";
+  // let scaleCss = "";
+  // if (size !== "current") {
+  //   const widthMm = PAPER_MM[size][0];
+  //   const contentPx = ((widthMm - 16) / 25.4) * 96; // dikurangi margin 8mm*2
+  //   const factor = Math.min(1, contentPx / 400);    // bon lebar 400px
+  //   pageCss = `@page{size:${size};margin:8mm}`;
+  //   scaleCss = `#${elementId}{transform:scale(${factor});transform-origin:top center}`;
+  // }
 
   win.document.write(
     `<!doctype html><html><head><meta charset="utf-8"><title>Bon</title>` +

@@ -497,7 +497,10 @@ function CalculateContent() {
                 />
               </div>
 
-              <ExportButtons transactionNumber={saved.transaction_number} />
+              <ExportButtons
+                transactionNumber={saved.transaction_number}
+                phone={saved.phone}
+              />
 
               <div className="no-print grid grid-cols-2 gap-2">
                 <Button variant="outline" onClick={handleNewTransaction}>

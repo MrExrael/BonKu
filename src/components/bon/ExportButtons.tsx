@@ -1,7 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { FileImage, FileText, Image as ImageIcon, Loader2, Printer } from "lucide-react";
+import {
+  FileImage,
+  FileText,
+  Image as ImageIcon,
+  Loader2,
+  MessageCircle,
+  Printer,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -9,6 +16,7 @@ import {
   exportToImage,
   exportToPDF,
   printElement,
+  shareToWhatsApp,
   type PaperSize,
 } from "@/lib/utils/export";
 import { Button } from "@/components/ui/button";
@@ -21,7 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-type Action = "print" | "pdf" | "png" | "jpg";
+type Action = "print" | "pdf" | "png" | "jpg" | "wa-jpg" | "wa-pdf";
 
 const SIZE_OPTIONS: { value: PaperSize; label: string }[] = [
   { value: "current", label: "Ukuran sekarang" },
@@ -32,19 +40,24 @@ const SIZE_OPTIONS: { value: PaperSize; label: string }[] = [
 export function ExportButtons({
   transactionNumber,
   elementId = "bon-template",
+  phone,
+  waMessage,
 }: {
   transactionNumber: string;
   elementId?: string;
+  phone?: string | null;
+  waMessage?: string;
 }) {
   const [loading, setLoading] = React.useState<Action | null>(null);
   const [size, setSize] = React.useState<PaperSize>("current");
   const baseName = `BonKu-${transactionNumber}`;
+  const message = waMessage ?? `Bon ${transactionNumber}`;
 
   function handlePrint() {
-    printElement(elementId, size);
+    printElement(elementId);
   }
 
-  async function runExport(action: Exclude<Action, "print">) {
+  async function runExport(action: "pdf" | "png" | "jpg") {
     setLoading(action);
     try {
       const canvas = await captureElement(elementId);
@@ -56,7 +69,6 @@ export function ExportButtons({
       toast.success(`Bon berhasil diekspor (${action.toUpperCase()})`);
     } catch (err) {
       console.error(err);
-      // Fallback: buka dialog cetak agar user tetap bisa menyimpan bon.
       toast.info("Ekspor gagal, membuka dialog cetak sebagai alternatif.");
       window.print();
     } finally {
@@ -64,14 +76,35 @@ export function ExportButtons({
     }
   }
 
+  async function runWhatsApp(format: "jpg" | "pdf") {
+    setLoading(`wa-${format}`);
+    try {
+      const canvas = await captureElement(elementId);
+      const result = await shareToWhatsApp(canvas, baseName, format, {
+        size,
+        phone,
+        message,
+      });
+      if (result === "fallback") {
+        toast.info("File diunduh. Lampirkan ke WhatsApp yang terbuka.");
+      } else if (result === "shared") {
+        toast.success("Bon dibagikan");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Gagal mengirim ke WhatsApp");
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  const busy = loading !== null;
+
   return (
     <div className="no-print space-y-3">
       <div className="space-y-1.5">
         <Label htmlFor="export-size">Ukuran cetak & ekspor</Label>
-        <Select
-          value={size}
-          onValueChange={(v) => v && setSize(v as PaperSize)}
-        >
+        <Select value={size} onValueChange={(v) => v && setSize(v as PaperSize)}>
           <SelectTrigger id="export-size" className="w-full">
             <SelectValue />
           </SelectTrigger>
@@ -86,19 +119,11 @@ export function ExportButtons({
       </div>
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Button
-          variant="outline"
-          onClick={handlePrint}
-          disabled={loading !== null}
-        >
+        <Button variant="outline" onClick={handlePrint} disabled={busy}>
           <Printer className="size-4" />
           Cetak
         </Button>
-        <Button
-          variant="outline"
-          onClick={() => runExport("pdf")}
-          disabled={loading !== null}
-        >
+        <Button variant="outline" onClick={() => runExport("pdf")} disabled={busy}>
           {loading === "pdf" ? (
             <Loader2 className="size-4 animate-spin" />
           ) : (
@@ -106,11 +131,7 @@ export function ExportButtons({
           )}
           Export PDF
         </Button>
-        <Button
-          variant="outline"
-          onClick={() => runExport("png")}
-          disabled={loading !== null}
-        >
+        <Button variant="outline" onClick={() => runExport("png")} disabled={busy}>
           {loading === "png" ? (
             <Loader2 className="size-4 animate-spin" />
           ) : (
@@ -118,11 +139,7 @@ export function ExportButtons({
           )}
           Export PNG
         </Button>
-        <Button
-          variant="outline"
-          onClick={() => runExport("jpg")}
-          disabled={loading !== null}
-        >
+        <Button variant="outline" onClick={() => runExport("jpg")} disabled={busy}>
           {loading === "jpg" ? (
             <Loader2 className="size-4 animate-spin" />
           ) : (
@@ -130,6 +147,37 @@ export function ExportButtons({
           )}
           Export JPG
         </Button>
+      </div>
+
+      {/* Kirim ke WhatsApp */}
+      <div className="space-y-1.5">
+        <Label>Kirim ke WhatsApp</Label>
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            className="bg-emerald-600 text-white hover:bg-emerald-600/90"
+            onClick={() => runWhatsApp("jpg")}
+            disabled={busy}
+          >
+            {loading === "wa-jpg" ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <MessageCircle className="size-4" />
+            )}
+            WA (JPG)
+          </Button>
+          <Button
+            className="bg-emerald-600 text-white hover:bg-emerald-600/90"
+            onClick={() => runWhatsApp("pdf")}
+            disabled={busy}
+          >
+            {loading === "wa-pdf" ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <MessageCircle className="size-4" />
+            )}
+            WA (PDF)
+          </Button>
+        </div>
       </div>
     </div>
   );

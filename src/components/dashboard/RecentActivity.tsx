@@ -171,7 +171,10 @@ export function RecentActivity({ transactions, loading }: RecentActivityProps) {
                   unitLabel={unitLabel}
                 />
               </div>
-              <ExportButtons transactionNumber={detail.transaction_number} />
+              <ExportButtons
+                transactionNumber={detail.transaction_number}
+                phone={detail.phone}
+              />
             </div>
           )}
         </DialogContent>

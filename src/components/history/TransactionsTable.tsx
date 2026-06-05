@@ -429,7 +429,10 @@ export function TransactionsTable({
                   unitLabel={unitLabel}
                 />
               </div>
-              <ExportButtons transactionNumber={activeTx.transaction_number} />
+              <ExportButtons
+                transactionNumber={activeTx.transaction_number}
+                phone={activeTx.phone}
+              />
             </div>
           )}
         </DialogContent>
