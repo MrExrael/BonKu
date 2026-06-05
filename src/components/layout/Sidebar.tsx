@@ -8,7 +8,6 @@ import {
   LayoutDashboard,
   Package,
   Settings,
-  Trash2,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -26,7 +25,6 @@ const NAV_ITEMS = [
   { label: "History", href: "/history", icon: History },
   { label: "Kelola Barang", href: "/products", icon: Package },
   { label: "Settings", href: "/settings", icon: Settings },
-  { label: "Sampah", href: "/trash", icon: Trash2 },
 ] as const;
 
 function initials(name: string): string {

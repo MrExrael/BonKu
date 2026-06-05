@@ -15,6 +15,7 @@ import { BackupRestore } from "@/components/settings/BackupRestore";
 import { CompanySettings } from "@/components/settings/CompanySettings";
 import { UnitSettings } from "@/components/settings/UnitSettings";
 import { PpnSettings } from "@/components/settings/PpnSettings";
+import { TrashManager } from "@/components/settings/TrashManager";
 
 export default function SettingsPage() {
   return (
@@ -30,6 +31,7 @@ export default function SettingsPage() {
         <TabsList>
           <TabsTrigger value="akun">Akun</TabsTrigger>
           <TabsTrigger value="backup">Backup &amp; Restore</TabsTrigger>
+          <TabsTrigger value="sampah">Sampah</TabsTrigger>
         </TabsList>
 
         <TabsContent value="akun" className="mt-4 space-y-4">
@@ -96,6 +98,13 @@ export default function SettingsPage() {
             </p>
           </div>
           <BackupRestore />
+        </TabsContent>
+
+        <TabsContent value="sampah" className="mt-4 space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold">Sampah</h2>
+          </div>
+          <TrashManager />
         </TabsContent>
       </Tabs>
     </div>
