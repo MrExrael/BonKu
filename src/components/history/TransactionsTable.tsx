@@ -142,10 +142,12 @@ export function TransactionsTable({
     const { error } = await deleteTransaction(deleteTarget.id);
     setDeleting(false);
     if (error) {
-      toast.error("Gagal menghapus transaksi", { description: error });
+      toast.error("Gagal memindahkan ke Sampah", { description: error });
       return;
     }
-    toast.success("Transaksi dihapus");
+    toast.success("Transaksi dipindahkan ke Sampah", {
+      description: "Bisa dipulihkan dari menu Sampah.",
+    });
     setDeleteTarget(null);
     onChanged?.();
   }
@@ -429,10 +431,10 @@ export function TransactionsTable({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Hapus transaksi?</AlertDialogTitle>
+            <AlertDialogTitle>Pindahkan ke Sampah?</AlertDialogTitle>
             <AlertDialogDescription>
-              Transaksi {deleteTarget?.transaction_number} beserta seluruh
-              itemnya akan dihapus permanen. Tindakan ini tidak bisa dibatalkan.
+              Transaksi {deleteTarget?.transaction_number} akan dipindahkan ke
+              Sampah. Anda bisa memulihkannya lagi dari menu Sampah.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -445,7 +447,7 @@ export function TransactionsTable({
               }}
               disabled={deleting}
             >
-              {deleting ? "Menghapus..." : "Hapus"}
+              {deleting ? "Memindahkan..." : "Pindahkan ke Sampah"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

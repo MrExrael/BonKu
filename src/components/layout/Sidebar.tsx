@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Package,
   Settings,
+  Trash2,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
   { label: "Menghitung", href: "/calculate", icon: Calculator },
   { label: "History", href: "/history", icon: History },
   { label: "Kelola Barang", href: "/products", icon: Package },
+  { label: "Sampah", href: "/trash", icon: Trash2 },
   { label: "Settings", href: "/settings", icon: Settings },
 ] as const;
 

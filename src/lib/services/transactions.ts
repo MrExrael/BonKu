@@ -68,6 +68,7 @@ export async function getTransactions(
       .from("transactions")
       .select("*, transaction_items(*)")
       .eq("user_id", user.id)
+      .is("deleted_at", null)
       .order("transaction_date", { ascending: false });
 
     if (filters.search) {
@@ -271,8 +272,74 @@ export async function updateTransactionWithItems(
   }
 }
 
-/** Hapus transaksi (items ikut terhapus via ON DELETE CASCADE). */
+/**
+ * Pindahkan transaksi ke Sampah (soft delete): set deleted_at = sekarang.
+ * Data tidak benar-benar dihapus dan bisa dipulihkan dari menu Sampah.
+ */
 export async function deleteTransaction(
+  id: string
+): Promise<ServiceResult<boolean>> {
+  try {
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("transactions")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) throw error;
+
+    return { data: true, error: null };
+  } catch (err) {
+    return { data: null, error: errorMessage(err) };
+  }
+}
+
+/** Ambil transaksi yang ada di Sampah (deleted_at terisi). */
+export async function getDeletedTransactions(): Promise<
+  ServiceResult<TransactionWithItems[]>
+> {
+  try {
+    const supabase = createClient();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    if (!user) throw new Error("Tidak ada user yang sedang login");
+
+    const { data, error } = await supabase
+      .from("transactions")
+      .select("*, transaction_items(*)")
+      .eq("user_id", user.id)
+      .not("deleted_at", "is", null)
+      .order("deleted_at", { ascending: false });
+    if (error) throw error;
+
+    return { data: (data ?? []) as TransactionWithItems[], error: null };
+  } catch (err) {
+    return { data: null, error: errorMessage(err) };
+  }
+}
+
+/** Pulihkan transaksi dari Sampah: set deleted_at = null. */
+export async function restoreTransaction(
+  id: string
+): Promise<ServiceResult<boolean>> {
+  try {
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("transactions")
+      .update({ deleted_at: null })
+      .eq("id", id);
+    if (error) throw error;
+
+    return { data: true, error: null };
+  } catch (err) {
+    return { data: null, error: errorMessage(err) };
+  }
+}
+
+/** Hapus transaksi permanen (items ikut terhapus via ON DELETE CASCADE). */
+export async function permanentDeleteTransaction(
   id: string
 ): Promise<ServiceResult<boolean>> {
   try {

@@ -12,6 +12,7 @@ const PROTECTED_ROUTES = [
   "/calculate",
   "/history",
   "/products",
+  "/trash",
   "/settings",
   "/profile",
 ];

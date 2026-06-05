@@ -41,7 +41,7 @@ export function ExportButtons({
   const baseName = `BonKu-${transactionNumber}`;
 
   function handlePrint() {
-    printElement(elementId);
+    printElement(elementId, size);
   }
 
   async function runExport(action: Exclude<Action, "print">) {
@@ -67,7 +67,7 @@ export function ExportButtons({
   return (
     <div className="no-print space-y-3">
       <div className="space-y-1.5">
-        <Label htmlFor="export-size">Ukuran ekspor</Label>
+        <Label htmlFor="export-size">Ukuran cetak & ekspor</Label>
         <Select
           value={size}
           onValueChange={(v) => v && setSize(v as PaperSize)}

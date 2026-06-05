@@ -161,7 +161,10 @@ function ensureExtension(filename: string, ext: string): string {
  * saat elemen berada di dalam Dialog ber-transform (print jadi mungil/landscape).
  * Jika popup diblokir, fallback ke window.print().
  */
-export function printElement(elementId: string): void {
+export function printElement(
+  elementId: string,
+  size: PaperSize = "current"
+): void {
   const element = document.getElementById(elementId);
   if (!element) {
     window.print();
@@ -175,10 +178,22 @@ export function printElement(elementId: string): void {
     return;
   }
 
+  // Untuk A5/A6: set ukuran halaman + skала bon agar muat di lebar kertas,
+  // sehingga pratinjau cetak tampil sesuai ukuran kertas.
+  let pageCss = "@page{margin:10mm}";
+  let scaleCss = "";
+  if (size !== "current") {
+    const widthMm = PAPER_MM[size][0];
+    const contentPx = ((widthMm - 16) / 25.4) * 96; // dikurangi margin 8mm*2
+    const factor = Math.min(1, contentPx / 400); // bon lebar 400px
+    pageCss = `@page{size:${size};margin:8mm}`;
+    scaleCss = `#${elementId}{transform:scale(${factor});transform-origin:top center}`;
+  }
+
   win.document.write(
     `<!doctype html><html><head><meta charset="utf-8"><title>Bon</title>` +
-      `<style>@page{margin:10mm} html,body{margin:0;padding:0;background:#fff}` +
-      `body{display:flex;justify-content:center;padding:8px}</style>` +
+      `<style>${pageCss} html,body{margin:0;padding:0;background:#fff}` +
+      `body{display:flex;justify-content:center;padding:8px}${scaleCss}</style>` +
       `</head><body>${element.outerHTML}</body></html>`
   );
   win.document.close();

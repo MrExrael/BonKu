@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 
 import { getTransactions } from "@/lib/services/transactions";
 import type { TransactionWithItems } from "@/lib/services/transactions";
@@ -90,13 +90,23 @@ function HistoryContent() {
             Daftar semua transaksi yang tersimpan.
           </p>
         </div>
-        <Link
-          href="/calculate"
-          className={cn(buttonVariants(), "hidden sm:inline-flex")}
-        >
-          <Plus className="size-4" />
-          Transaksi Baru
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/trash"
+            className={cn(buttonVariants({ variant: "outline" }))}
+            aria-label="Sampah"
+          >
+            <Trash2 className="size-4" />
+            <span className="hidden sm:inline">Sampah</span>
+          </Link>
+          <Link
+            href="/calculate"
+            className={cn(buttonVariants(), "hidden sm:inline-flex")}
+          >
+            <Plus className="size-4" />
+            Transaksi Baru
+          </Link>
+        </div>
       </div>
 
       <Tabs

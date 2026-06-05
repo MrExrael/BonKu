@@ -125,6 +125,7 @@ export type Database = {
           grand_total: number;
           payment_status: string;
           transaction_date: string;
+          deleted_at: string | null;
           created_at: string | null;
         };
         Insert: {
@@ -143,6 +144,7 @@ export type Database = {
           grand_total?: number;
           payment_status?: string;
           transaction_date?: string;
+          deleted_at?: string | null;
           created_at?: string | null;
         };
         Update: {
@@ -161,6 +163,7 @@ export type Database = {
           grand_total?: number;
           payment_status?: string;
           transaction_date?: string;
+          deleted_at?: string | null;
           created_at?: string | null;
         };
         Relationships: [

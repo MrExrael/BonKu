@@ -64,6 +64,7 @@ create table if not exists public.transactions (
   grand_total        numeric(15, 2) not null default 0,
   payment_status     text not null default 'lunas',
   transaction_date   timestamptz not null default now(),
+  deleted_at         timestamptz,
   created_at         timestamptz default now()
 );
 
